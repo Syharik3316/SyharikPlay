@@ -140,14 +140,17 @@
       btnPause.textContent = paused ? 'Возобновить' : 'Пауза';
     });
 
-    // События клавиатуры пробрасываем внутрь игры
+    // События клавиатуры пробрасываем внутрь игры.
+    // При поставленной на паузу игре ввод игнорируется.
     window.addEventListener('keydown', (e) => {
+      if (paused) return;
       if (instance && typeof instance.onKeyDown === 'function') {
         instance.onKeyDown(e);
       }
     });
 
     window.addEventListener('keyup', (e) => {
+      if (paused) return;
       if (instance && typeof instance.onKeyUp === 'function') {
         instance.onKeyUp(e);
       }
