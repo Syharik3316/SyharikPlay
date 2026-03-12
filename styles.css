@@ -952,12 +952,35 @@ main {
 
 @media (max-width: 600px) {
   .game-page-main {
-    padding: 1.5rem 1.25rem 2rem;
+    padding: 0.75rem 0.5rem 1rem;
+  }
+
+  .game-fullscreen {
+    gap: 0.75rem;
   }
 
   .game-fullscreen-canvas-wrap {
     max-width: 100%;
-    padding: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  .game-fullscreen-canvas-wrap canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-height: min(720px, 80vh, 80dvh);
+  }
+
+  .game-fullscreen-info {
+    gap: 0.25rem;
+  }
+
+  .game-fullscreen-title {
+    font-size: 1.4rem;
+  }
+
+  .game-fullscreen-subtitle,
+  .games-hint {
+    font-size: 0.8rem;
   }
 
   .game-fullscreen-controls .btn {

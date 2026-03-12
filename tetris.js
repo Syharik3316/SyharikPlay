@@ -81,8 +81,7 @@
 
     const cellSize = Math.floor(canvas.height / CONFIG.rows);
     const playWidth = CONFIG.cols * cellSize;
-    const prevW = Math.min(70, Math.floor(canvas.width * 0.12));
-    const offsetX = Math.floor((canvas.width - playWidth - prevW - 8) / 2);
+    const offsetX = Math.floor((canvas.width - playWidth) / 2);
 
     let board;
     let current;
@@ -258,11 +257,11 @@
         }
       }
 
-      // Превью следующей фигуры
+      // Превью следующей фигуры — справа от поля
       if (next && alive) {
-        const prevCell = Math.min(14, Math.floor(prevW / 4));
+        const prevCell = Math.min(16, Math.floor((canvas.width - offsetX - playWidth - 20) / 4));
         const prevBox = 4 * prevCell;
-        const prevX = offsetX + playWidth + 6;
+        const prevX = offsetX + playWidth + 12;
         const prevY = 40;
         ctx.strokeStyle = gridC;
         ctx.lineWidth = 1;
@@ -338,8 +337,10 @@
         move(1);
         handled = true;
       } else if (key === 'arrowdown' || code === 'ArrowDown' || key === 's' || code === 'KeyS') {
+        if (dropSpeed !== CONFIG.softDropSpeed) {
+          fallTimer = 0;
+        }
         dropSpeed = CONFIG.softDropSpeed;
-        fallTimer = 0;
         handled = true;
       } else if (key === 'arrowup' || code === 'ArrowUp' || key === 'w' || code === 'KeyW') {
         rotate();

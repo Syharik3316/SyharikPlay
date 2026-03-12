@@ -5,7 +5,7 @@
 (function () {
   const CONFIG = {
     gridSize: 20,
-    speed: 8, // клеток в секунду
+    speed: 6, // клеток в секунду
     background: '#141417',
     snakeColor: '#e8c547',
     snakeHeadColor: '#f5f5f5',
