@@ -116,8 +116,11 @@
       }
 
       // Змейка
+      const headColor = document.documentElement.getAttribute('data-theme') === 'dark'
+        ? CONFIG.snakeHeadColor
+        : (getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#181818');
       snake.forEach((seg, index) => {
-        ctx.fillStyle = index === 0 ? CONFIG.snakeHeadColor : CONFIG.snakeColor;
+        ctx.fillStyle = index === 0 ? headColor : CONFIG.snakeColor;
         ctx.fillRect(
           seg.x * cellSize,
           seg.y * cellSize,

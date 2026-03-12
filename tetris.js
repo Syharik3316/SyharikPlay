@@ -81,7 +81,8 @@
 
     const cellSize = Math.floor(canvas.height / CONFIG.rows);
     const playWidth = CONFIG.cols * cellSize;
-    const offsetX = Math.floor((canvas.width - playWidth - 120) / 2); // место под превью
+    const prevW = Math.min(70, Math.floor(canvas.width * 0.12));
+    const offsetX = Math.floor((canvas.width - playWidth - prevW - 8) / 2);
 
     let board;
     let current;
@@ -259,12 +260,13 @@
 
       // Превью следующей фигуры
       if (next && alive) {
-        const prevCell = Math.min(24, Math.floor(cellSize * 0.7));
-        const prevW = 4 * prevCell;
-        const prevX = offsetX + playWidth + 20;
-        const prevY = 60;
-        ctx.fillStyle = gridC;
-        ctx.strokeRect(prevX - 4, prevY - 4, prevW + 8, prevW + 8);
+        const prevCell = Math.min(14, Math.floor(prevW / 4));
+        const prevBox = 4 * prevCell;
+        const prevX = offsetX + playWidth + 6;
+        const prevY = 40;
+        ctx.strokeStyle = gridC;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(prevX - 1, prevY - 1, prevBox + 2, prevBox + 2);
         const shape = SHAPES[next];
         const sz = shape.length;
         const padX = Math.floor((4 - sz) / 2);
@@ -280,11 +282,11 @@
             ctx.fillRect(px, py + prevCell * 0.5, prevCell, prevCell * 0.5);
           }
         }
-        ctx.font = '12px Outfit, sans-serif';
-        ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
+        ctx.font = '10px Outfit, sans-serif';
+        ctx.fillStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        ctx.fillText('Следующая', prevX, prevY + prevW + 8);
+        ctx.fillText('След.', prevX, prevY + prevBox + 4);
       }
 
       // Текущая фигура
@@ -337,6 +339,7 @@
         handled = true;
       } else if (key === 'arrowdown' || code === 'ArrowDown' || key === 's' || code === 'KeyS') {
         dropSpeed = CONFIG.softDropSpeed;
+        fallTimer = 0;
         handled = true;
       } else if (key === 'arrowup' || code === 'ArrowUp' || key === 'w' || code === 'KeyW') {
         rotate();
@@ -356,6 +359,7 @@
       const code = e.code;
       if (key === 'arrowdown' || code === 'ArrowDown' || key === 's' || code === 'KeyS') {
         dropSpeed = CONFIG.fallSpeed;
+        fallTimer = 0;
         e.preventDefault();
       }
     }
