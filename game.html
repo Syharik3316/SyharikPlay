@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SyharikPlay — игра уже ждёт</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <div class="grid-pattern" id="gridPattern"></div>
+  <div class="click-ripples" id="clickRipples"></div>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">◆</span>
+        <span class="logo-text">SyharikPlay</span>
+      </a>
+
+      <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+          <span class="theme-icon theme-icon-sun">☀</span>
+          <span class="theme-icon theme-icon-moon">☽</span>
+          <span class="theme-toggle-track"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="game-page-main">
+    <section class="game-fullscreen">
+      <div class="game-fullscreen-canvas-wrap">
+        <canvas id="gameCanvasFull" width="720" height="720"></canvas>
+      </div>
+
+      <div class="game-fullscreen-info">
+        <h1 class="game-fullscreen-title" id="gameTitle">Загрузка игры…</h1>
+        <p class="game-fullscreen-subtitle" id="gameSubtitle"></p>
+        <div class="game-fullscreen-score">
+          <span class="games-score-label">Счёт:</span>
+          <span class="games-score-value" id="gameScoreFull">0</span>
+          <span class="games-score-sep">·</span>
+          <span class="games-score-label">Лучший:</span>
+          <span class="games-score-value" id="gameBestScore">0</span>
+        </div>
+      </div>
+
+      <div class="game-fullscreen-controls">
+        <button class="btn btn-primary" id="btnRestart">Перезапуск</button>
+        <button class="btn btn-ghost" id="btnPauseFull">Пауза</button>
+        <a href="index.html#games" class="btn btn-ghost">Назад к выбору игр</a>
+      </div>
+
+      <p class="games-hint">
+        Управление зависит от выбранной игры: на компьютере используй клавиатуру, 
+        на телефоне — свайпы и касания. Личный рекорд сохраняется на этом устройстве.
+      </p>
+    </section>
+  </main>
+
+  <script src="snake.js"></script>
+  <script src="tetris.js"></script>
+  <script src="flappy-bird.js"></script>
+  <script src="fifteen.js"></script>
+  <script src="game-page.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SyharikPlay — играй, соревнуйся, побеждай</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <!-- Фоновые светящиеся элементы -->
+  <div class="glow-orb-wrap" data-orb="1"><div class="glow-orb glow-orb-1"></div></div>
+  <div class="glow-orb-wrap" data-orb="2"><div class="glow-orb glow-orb-2"></div></div>
+  <div class="glow-orb-wrap" data-orb="3"><div class="glow-orb glow-orb-3"></div></div>
+  <div class="glow-orb-wrap" data-orb="4"><div class="glow-orb glow-orb-4"></div></div>
+  <div class="grid-pattern" id="gridPattern"></div>
+  <div class="click-ripples" id="clickRipples"></div>
+
+  <!-- Шапка -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="#" class="logo">
+        <span class="logo-icon">◆</span>
+        <span class="logo-text">SyharikPlay</span>
+      </a>
+
+      <div class="nav-overlay" id="navOverlay" aria-hidden="true"></div>
+      <button class="nav-toggle" id="navToggle" aria-label="Меню" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+
+      <nav class="nav" id="nav">
+        <a href="#games" class="nav-link">Игры</a>
+        <a href="#features" class="nav-link">Возможности</a>
+        <a href="#about" class="nav-link">О нас</a>
+        <a href="#contact" class="nav-link">Контакты</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+          <span class="theme-icon theme-icon-sun">☀</span>
+          <span class="theme-icon theme-icon-moon">☽</span>
+          <span class="theme-toggle-track"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Основной контент -->
+  <main>
+    <!-- Hero секция -->
+    <section class="hero">
+      <div class="hero-content">
+        <span class="hero-badge">✨ Мини‑игры на каждый день</span>
+        <h1 class="hero-title">
+          <span class="hero-title-line">Играй коротко,</span>
+          <span class="hero-title-line hero-title-accent">вовлекайся</span>
+          <span class="hero-title-line">по‑настоящему</span>
+        </h1>
+        <p class="hero-description">
+          Быстрые катки в Змейку, Тетрис, Flappy Bird и Пятнашки. 
+          Открыл сайт — сразу в игре: без регистрации, без лишних кнопок, 
+          с удобным управлением на телефоне и компьютере.
+        </p>
+        <div class="hero-actions">
+          <a href="#games" class="btn btn-primary">Выбрать игру</a>
+          <a href="#about" class="btn btn-ghost">Почему именно SyharikPlay</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="glow-card hero-card">
+          <div class="hero-card-inner">
+            <div class="floating-shape shape-1"></div>
+            <div class="floating-shape shape-2"></div>
+            <div class="floating-shape shape-3"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Секция игр -->
+    <section class="games" id="games">
+      <h2 class="section-title">Мини‑игры SyharikPlay</h2>
+
+      <div class="games-layout">
+        <div class="games-list" id="gamesList">
+          <!-- Карточки игр создаются из JS, чтобы их было проще конфигурировать -->
+        </div>
+      </div>
+
+      <p class="games-hint games-hint-center">
+        Нажми на игру, чтобы открыть её в полноэкранном режиме. 
+        Счёт и личный рекорд сохраняются на твоём устройстве — возвращайся, чтобы побить самого себя.
+      </p>
+    </section>
+
+    <!-- Секция возможностей -->
+    <section class="features" id="features">
+      <h2 class="section-title">Почему здесь удобно играть</h2>
+      <div class="features-grid">
+        <article class="feature-card glow-card">
+          <div class="feature-icon">◇</div>
+          <h3>Комфортные сессии</h3>
+          <p>Запускай игру за пару секунд — идеальный формат, чтобы отвлечься на перемене, в метро или между задачами.</p>
+        </article>
+        <article class="feature-card glow-card">
+          <div class="feature-icon">○</div>
+          <h3>Мягкие анимации</h3>
+          <p>Ненавязчивые эффекты и плавные переходы, которые не отвлекают от геймплея и не утомляют глаза.</p>
+        </article>
+        <article class="feature-card glow-card">
+          <div class="feature-icon">◈</div>
+          <h3>Светлый и тёмный режимы</h3>
+          <p>Играй так, как тебе удобнее: днём — в светлой теме, ночью — в тёмной, одним нажатием.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- О нас -->
+    <section class="about" id="about">
+      <div class="about-content">
+        <h2 class="section-title">Игровое пространство без лишнего</h2>
+        <p class="about-text">
+          SyharikPlay задуман как уютное место с простыми и понятными мини‑играми, 
+          куда можно зайти в любой момент: на ноутбуке или телефоне, в тёмной или светлой теме, 
+          в одиночку или с друзьями за одним экраном — чтобы просто получить удовольствие от игры.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Футер -->
+  <footer class="footer" id="contact">
+    <div class="footer-glow"></div>
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="footer-logo">
+            <span class="logo-icon">◆</span>
+            SyharikPlay
+          </a>
+          <p class="footer-tagline">Короткие игры, которые всегда под рукой</p>
+        </div>
+
+        <div class="footer-links">
+          <h4>Навигация</h4>
+          <a href="#games">Игры</a>
+          <a href="#features">Возможности</a>
+          <a href="#about">О нас</a>
+        </div>
+
+        <div class="footer-links">
+          <h4>Режимы игры</h4>
+          <a href="#games">Классические аркады</a>
+          <a href="#games">Головоломки</a>
+          <a href="#games">Раннеры</a>
+        </div>
+
+        <div class="footer-social">
+          <h4>Мы в сети</h4>
+          <div class="social-links">
+            <a href="https://t.me/Syharik3316" class="social-link" aria-label="Telegram">✈</a>
+            <a href="https://syharik.ru" class="social-link" aria-label="Syharik">◉</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 SyharikPlay. Все права защищены.</p>
+        <p class="footer-made">Сделано для тех, кто любит «ещё одну попытку»</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="snake.js"></script>
+  <script src="tetris.js"></script>
+  <script src="flappy-bird.js"></script>
+  <script src="fifteen.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
