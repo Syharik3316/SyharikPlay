@@ -2,6 +2,18 @@
  * FrontVisual — Переключение темы и интерактивность
  */
 
+// Регистрируем отдельные игры-страницы (не через game.html)
+window.gamesRegistry = window.gamesRegistry || {};
+window.gamesRegistry.forest = window.gamesRegistry.forest || {
+  id: 'forest',
+  title: 'Forest',
+  description: 'Выживи в тёмном лесу и выберись наружу.',
+  genre: 'Хоррор',
+  difficulty: 'Сложная',
+  shortcode: 'FOREST',
+  url: 'forest.html'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   initThemeToggle();
   initMobileNav();
@@ -302,8 +314,8 @@ function initGamesCatalog() {
     `;
 
     card.addEventListener('click', () => {
-      const url = `game.html?game=${encodeURIComponent(game.id)}`;
-      window.location.href = url;
+      const targetUrl = game.url || `game.html?game=${encodeURIComponent(game.id)}`;
+      window.location.href = targetUrl;
     });
 
     listEl.appendChild(card);
