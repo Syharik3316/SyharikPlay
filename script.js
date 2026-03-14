@@ -69,7 +69,13 @@ function initThemeToggle() {
     if (!heroGif) return;
     const isDark = theme === 'dark';
     // Имена файлов гифок для светлой и тёмной тем
-    heroGif.src = isDark ? 'hero-animation-dark.gif' : 'hero-animation-light.gif';
+    const baseSrc = isDark ? 'hero-animation-dark.gif' : 'hero-animation-light.gif';
+
+    // Сбрасываем текущий GIF, чтобы он не доигрывал до конца
+    heroGif.src = '';
+    // Небольшой cache-busting по типу темы (чтобы браузер не залипал на старом кадре)
+    const newSrc = `${baseSrc}?theme=${isDark ? 'dark' : 'light'}`;
+    heroGif.src = newSrc;
   }
 
   // Загрузка сохранённой темы
