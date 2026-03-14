@@ -2,6 +2,18 @@
  * FrontVisual — Переключение темы и интерактивность
  */
 
+// Регистрируем отдельные игры-страницы (не через game.html)
+window.gamesRegistry = window.gamesRegistry || {};
+window.gamesRegistry.forest = window.gamesRegistry.forest || {
+  id: 'forest',
+  title: 'Forest',
+  description: 'Выживи в тёмном лесу и выберись наружу.',
+  genre: 'Хоррор',
+  difficulty: 'Сложная',
+  shortcode: 'FOREST',
+  url: 'forest.html'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   initThemeToggle();
   initMobileNav();
@@ -51,15 +63,26 @@ function initMobileNav() {
 function initThemeToggle() {
   const toggle = document.getElementById('themeToggle');
   const html = document.documentElement;
+  const heroGif = document.querySelector('.hero-gif');
+
+  function updateHeroGif(theme) {
+    if (!heroGif) return;
+    const isDark = theme === 'dark';
+    // Имена файлов гифок для светлой и тёмной тем
+    heroGif.src = isDark ? 'hero-animation-dark.gif' : 'hero-animation-light.gif';
+  }
 
   // Загрузка сохранённой темы
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {
     html.setAttribute('data-theme', savedTheme);
+    updateHeroGif(savedTheme);
   } else {
     // Определение системной темы
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    const initialTheme = prefersDark ? 'dark' : 'light';
+    html.setAttribute('data-theme', initialTheme);
+    updateHeroGif(initialTheme);
   }
 
   toggle.addEventListener('click', () => {
@@ -68,6 +91,7 @@ function initThemeToggle() {
     
     html.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
+    updateHeroGif(next);
     
     // Небольшая анимация нажатия
     toggle.style.transform = 'scale(0.95)';
@@ -302,8 +326,8 @@ function initGamesCatalog() {
     `;
 
     card.addEventListener('click', () => {
-      const url = `game.html?game=${encodeURIComponent(game.id)}`;
-      window.location.href = url;
+      const targetUrl = game.url || `game.html?game=${encodeURIComponent(game.id)}`;
+      window.location.href = targetUrl;
     });
 
     listEl.appendChild(card);
