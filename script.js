@@ -7,7 +7,7 @@ window.gamesRegistry = window.gamesRegistry || {};
 window.gamesRegistry.forest = window.gamesRegistry.forest || {
   id: 'forest',
   title: 'Forest',
-  description: 'Выживи в тёмном лесу и выберись наружу.',
+  description: 'Выживи в тёмном лесу и выберись наружу собирая записки.',
   genre: 'Хоррор',
   difficulty: 'Сложная',
   shortcode: 'FOREST',
