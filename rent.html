@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аренда - 3D Хоррор</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; user-select: none; }
+        canvas { display: block; }
+        
+        /* UI Overlays */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+        
+        #crosshair { width: 4px; height: 4px; background-color: rgba(255, 255, 255, 0.7); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        
+        /* НОВОЕ СТИЛЬНОЕ МЕНЮ */
+        #start-screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: radial-gradient(circle at center, #110000 0%, #000000 100%);
+            color: #8b0000; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 20; pointer-events: auto; 
+        }
+        #start-screen::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.12"/></svg>');
+            pointer-events: none; mix-blend-mode: overlay;
+        }
+        #start-screen::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.9); pointer-events: none;
+        }
+        
+        @keyframes glitch {
+            0% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.75), -0.05em -0.025em 0 rgba(0,255,0,0.75), -0.025em 0.05em 0 rgba(0,0,255,0.75); }
+            14% { text-shadow: 0.05em 0 0 rgba(255,0,0,0.75), -0.05em -0.025em 0 rgba(0,255,0,0.75), -0.025em 0.05em 0 rgba(0,0,255,0.75); }
+            15% { text-shadow: -0.05em -0.025em 0 rgba(255,0,0,0.75), 0.025em 0.025em 0 rgba(0,255,0,0.75), -0.05em -0.05em 0 rgba(0,0,255,0.75); }
+            49% { text-shadow: -0.05em -0.025em 0 rgba(255,0,0,0.75), 0.025em 0.025em 0 rgba(0,255,0,0.75), -0.05em -0.05em 0 rgba(0,0,255,0.75); }
+            50% { text-shadow: 0.025em 0.05em 0 rgba(255,0,0,0.75), 0.05em 0 0 rgba(0,255,0,0.75), 0 -0.05em 0 rgba(0,0,255,0.75); }
+            99% { text-shadow: 0.025em 0.05em 0 rgba(255,0,0,0.75), 0.05em 0 0 rgba(0,255,0,0.75), 0 -0.05em 0 rgba(0,0,255,0.75); }
+            100% { text-shadow: -0.025em 0 0 rgba(255,0,0,0.75), -0.025em -0.025em 0 rgba(0,255,0,0.75), -0.025em -0.05em 0 rgba(0,0,255,0.75); }
+        }
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; }
+            20%, 24%, 55% { opacity: 0.3; }
+        }
+
+        #start-screen h1 { 
+            font-size: 7rem; margin-bottom: 5px; color: #fff; 
+            letter-spacing: 15px; text-transform: uppercase;
+            animation: glitch 2.5s infinite, flicker 5s infinite;
+            z-index: 1;
+        }
+        #start-screen p { 
+            color: #666; margin-bottom: 50px; font-size: 1.2rem; 
+            letter-spacing: 3px; text-shadow: 1px 1px 5px black; z-index: 1;
+            text-align: center;
+            max-width: 800px;
+        }
+        
+        button { 
+            padding: 15px 40px; font-size: 1.5rem; background: transparent; 
+            color: #8b0000; border: 2px solid #8b0000; cursor: pointer; 
+            font-family: inherit; letter-spacing: 2px; text-transform: uppercase;
+            transition: all 0.3s; z-index: 1; position: relative; overflow: hidden;
+        }
+        button:hover { 
+            background: #8b0000; color: #000; box-shadow: 0 0 30px #ff0000; 
+            border-color: #ff0000; font-weight: bold;
+        }
+        
+        #game-over-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #ff0000 0%, #3a0000 30%, #000000 70%); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 30; pointer-events: auto; opacity: 0; transition: opacity 0.1s; }
+        #game-over-screen::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.3"/></svg>'); pointer-events: none; mix-blend-mode: multiply; }
+        #game-over-screen h2 { color: black; font-size: 6rem; font-weight: bold; text-shadow: 0 0 20px rgba(255,255,255,0.5); z-index: 1; margin-bottom: 40px; }
+        
+        /* Меню паузы */
+        #pause-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 40; pointer-events: auto; }
+        #pause-screen h2 { color: white; font-size: 5rem; letter-spacing: 15px; margin-bottom: 40px; animation: flicker 3s infinite; }
+
+        #win-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #ffeebb 0%, #aa7722 50%, #221100 100%); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 30; pointer-events: auto; opacity: 0; transition: opacity 3s; }
+        #win-screen h2 { color: #331100; font-size: 4rem; z-index: 1; }
+        
+        #note-ui { position: absolute; bottom: 10%; width: 60%; left: 20%; background: rgba(200, 190, 170, 0.9); color: #111; padding: 20px; font-family: 'Times New Roman', Times, serif; font-size: 1.2rem; border: 1px solid #554; display: none; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        
+        #blackout { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: black; z-index: 15; display: none; justify-content: center; align-items: center; color: white; font-size: 2rem; }
+        
+        #interaction-hint { position: absolute; top: 60%; color: white; font-size: 1.2rem; display: none; text-shadow: 1px 1px 2px black; }
+    </style>
+    <!-- Подключаем Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div id="crosshair"></div>
+        <div id="interaction-hint">ЛКМ - Взаимодействовать</div>
+    </div>
+
+    <div id="note-ui">
+        <b>ПРАВИЛА ПРОЖИВАНИЯ:</b><br><br>
+        1. Если телевизор включился сам — <b>немедленно прячьтесь в шкаф</b>. Он не любит, когда его игнорируют.<br>
+        2. Если стучат в окно — <b>не смотрите туда</b>. Отвернитесь и ждите, пока они не уйдут.<br>
+        3. Если выбило пробки — <b>найдите щиток на стене в темноте</b> и включите свет. Темнота опасна.<br>
+        <i>Доживите до 06:00.</i>
+    </div>
+
+    <div id="blackout">Вы прячетесь в шкафу...</div>
+
+    <div id="start-screen">
+        <h1>АРЕНДА</h1>
+        <p>Квартира за копейки. Жаль, что в договоре не указано, кто приходит по ночам...</p>
+        <button id="btn-start">Начать игру</button>
+    </div>
+
+    <div id="pause-screen">
+        <h2>ПАУЗА</h2>
+        <button id="btn-resume">Продолжить</button>
+    </div>
+
+    <div id="game-over-screen">
+        <h2>ВАС НАШЛИ</h2>
+        <button id="btn-restart" style="z-index: 1;">Попробовать снова</button>
+    </div>
+
+    <div id="win-screen">
+        <h2>ВЫ ДОЖИЛИ ДО УТРА</h2>
+        <p style="color: #442200; font-size: 1.5rem; margin-top: 20px;">Смена окончена.</p>
+        <button id="btn-restart-win" style="z-index: 1; margin-top: 30px;">Играть заново</button>
+    </div>
+
+<script>
+/** ==========================================
+ * АУДИО ДВИЖОК (Web Audio API)
+ * ========================================== */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const masterGain = audioCtx.createGain();
+masterGain.connect(audioCtx.destination);
+masterGain.gain.value = 0.8;
+
+let ambientOsc, tvNoiseNode;
+
+function initAudio() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    // Эмбиент (низкий гул)
+    ambientOsc = audioCtx.createOscillator();
+    ambientOsc.type = 'sine';
+    ambientOsc.frequency.value = 55; // Низкая частота для давления
+    const ambientGain = audioCtx.createGain();
+    ambientGain.gain.value = 0.15;
+    ambientOsc.connect(ambientGain);
+    ambientGain.connect(masterGain);
+    ambientOsc.start();
+}
+
+function playTVNoise(play) {
+    if (play) {
+        if (tvNoiseNode) return;
+        const bufferSize = audioCtx.sampleRate * 2; 
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        tvNoiseNode = audioCtx.createBufferSource();
+        tvNoiseNode.buffer = buffer;
+        tvNoiseNode.loop = true;
+        
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+        
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.3;
+        
+        tvNoiseNode.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        tvNoiseNode.start();
+    } else {
+        if (tvNoiseNode) {
+            tvNoiseNode.stop();
+            tvNoiseNode.disconnect();
+            tvNoiseNode = null;
+        }
+    }
+}
+
+function playKnock() {
+    let startTime = audioCtx.currentTime;
+    for (let i = 0; i < 3; i++) {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(80, startTime + i * 0.3);
+        osc.frequency.exponentialRampToValueAtTime(40, startTime + i * 0.3 + 0.1);
+        
+        gain.gain.setValueAtTime(0.8, startTime + i * 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + i * 0.3 + 0.1);
+        
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(startTime + i * 0.3);
+        osc.stop(startTime + i * 0.3 + 0.1);
+    }
+}
+
+function playJumpscare() {
+    // Жуткий дисторшн аккорд
+    const duration = 1.5;
+    const osc1 = audioCtx.createOscillator();
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(100, audioCtx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.5);
+    
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(50, audioCtx.currentTime);
+    
+    // Белый шум
+    const bufferSize = audioCtx.sampleRate * duration;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(1.5, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+    // Простой дисторшн (WaveShaper)
+    const distortion = audioCtx.createWaveShaper();
+    function makeDistortionCurve(amount) {
+        let k = typeof amount === 'number' ? amount : 50,
+            n_samples = 44100, curve = new Float32Array(n_samples), deg = Math.PI / 180, i = 0, x;
+        for ( ; i < n_samples; ++i ) {
+            x = i * 2 / n_samples - 1;
+            curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
+        }
+        return curve;
+    }
+    distortion.curve = makeDistortionCurve(400);
+
+    osc1.connect(distortion);
+    osc2.connect(distortion);
+    noise.connect(distortion);
+    distortion.connect(gain);
+    gain.connect(masterGain);
+    
+    osc1.start(); osc2.start(); noise.start();
+    osc1.stop(audioCtx.currentTime + duration);
+    osc2.stop(audioCtx.currentTime + duration);
+}
+
+function playWinSound() {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+    osc.frequency.setValueAtTime(554.37, audioCtx.currentTime + 0.5); // C#5
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 1.0); // E5
+    
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 1);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 4);
+    
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 4);
+}
+
+// Звук переключения тумблера
+function playSwitchSound() {
+    if (audioCtx.state === 'suspended') return;
+    const t = audioCtx.currentTime;
+    
+    // Первый щелчок
+    let osc1 = audioCtx.createOscillator();
+    let gain1 = audioCtx.createGain();
+    osc1.type = 'square';
+    osc1.frequency.setValueAtTime(800, t);
+    osc1.frequency.exponentialRampToValueAtTime(100, t + 0.03);
+    gain1.gain.setValueAtTime(0.15, t);
+    gain1.gain.exponentialRampToValueAtTime(0.01, t + 0.03);
+    osc1.connect(gain1); gain1.connect(masterGain);
+    osc1.start(t); osc1.stop(t + 0.03);
+
+    // Второй щелчок (с небольшим запозданием)
+    let osc2 = audioCtx.createOscillator();
+    let gain2 = audioCtx.createGain();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(600, t + 0.04);
+    osc2.frequency.exponentialRampToValueAtTime(100, t + 0.07);
+    gain2.gain.setValueAtTime(0.15, t + 0.04);
+    gain2.gain.exponentialRampToValueAtTime(0.01, t + 0.07);
+    osc2.connect(gain2); gain2.connect(masterGain);
+    osc2.start(t + 0.04); osc2.stop(t + 0.07);
+}
+
+/** ==========================================
+ * ГРАФИКА (Three.js & Постпроцессинг)
+ * ========================================== */
+let scene, camera, renderer;
+let postScene, postCamera, postMaterial, renderTarget;
+let mainLight, ambientLight;
+
+// Объекты сцены
+let tvMesh, tvScreenMat, tvLight;
+let wardrobeMesh, fuseboxMesh, noteMesh, clockMat, clockCtx, clockTex;
+let monsterMesh; // Добавлен монстр
+
+// Состояние игры
+let gameActive = false;
+let isPaused = false;
+let gameTimeSeconds = 0; // 0 = 00:00, 360 = 06:00
+const MAX_TIME = 360;
+let isHidden = false;
+
+// Состояние игрока
+let pitch = 0, yaw = 0;
+const moveState = { w: false, a: false, s: false, d: false };
+const playerSpeed = 8.0;
+
+// Рейкастер
+const raycaster = new THREE.Raycaster();
+const centerVector = new THREE.Vector2(0, 0);
+let hoveredObject = null;
+
+// Система событий
+const EVENTS = { NONE: 0, TV: 1, WINDOW: 2, FUSE: 3 };
+let currentEvent = EVENTS.NONE;
+let lastEvent = EVENTS.NONE; // Память для предотвращения повторений
+let eventTimer = 0;
+let eventSubTimer = 0;
+let nextEventTriggerTime = 45; // Первое событие через 45 сек (было 15)
+
+function init3D() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x040404);
+    scene.fog = new THREE.FogExp2(0x040404, 0.02);
+
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 5, 0);
+
+    renderer = new THREE.WebGLRenderer({ antialias: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    // Настройка Постпроцессинга (Кастомный шейдер для одиночного файла)
+    renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+    postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    postScene = new THREE.Scene();
+
+    const postShaders = {
+        vertex: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = vec4(position, 1.0);
+            }
+        `,
+        fragment: `
+            uniform sampler2D tDiffuse;
+            uniform float time;
+            varying vec2 vUv;
+            
+            // Random noise generator
+            float rand(vec2 co){
+                return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+            }
+
+            void main() {
+                vec2 uv = vUv;
+                
+                // Chromatic Aberration
+                float caOffset = 0.004;
+                float r = texture2D(tDiffuse, uv + vec2(caOffset, 0.0)).r;
+                float g = texture2D(tDiffuse, uv).g;
+                float b = texture2D(tDiffuse, uv - vec2(caOffset, 0.0)).b;
+                vec3 color = vec3(r, g, b);
+                
+                // Film Grain / Noise
+                float noise = rand(uv + time) * 0.15;
+                color -= vec3(noise);
+                
+                // Vignette (затемнение по краям)
+                float dist = distance(uv, vec2(0.5));
+                color *= smoothstep(1.0, 0.35, dist);
+                
+                // Легкий грязно-зеленоватый оттенок
+                color *= vec3(0.9, 0.95, 0.85);
+
+                gl_FragColor = vec4(color, 1.0);
+            }
+        `
+    };
+
+    postMaterial = new THREE.ShaderMaterial({
+        vertexShader: postShaders.vertex,
+        fragmentShader: postShaders.fragment,
+        uniforms: {
+            tDiffuse: { value: renderTarget.texture },
+            time: { value: 0 }
+        }
+    });
+    const postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMaterial);
+    postScene.add(postQuad);
+
+    buildRoom();
+    setupControls();
+    window.addEventListener('resize', onWindowResize, false);
+}
+
+function buildRoom() {
+    // Текстуры и материалы (Добавлено side: THREE.BackSide для рендера изнутри)
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a3f32, roughness: 0.9, side: THREE.BackSide });
+    const wallFrontMat = new THREE.MeshStandardMaterial({ color: 0x4a3f32, roughness: 0.9 }); // Для ручных стен (смотрят внутрь)
+    const invMat = new THREE.MeshBasicMaterial({ visible: false }); // Невидимый материал для вырезания окна
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a221a, roughness: 1.0, side: THREE.BackSide });
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x2a1a10, roughness: 0.8 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8, roughness: 0.4 });
+    const windowMat = new THREE.MeshBasicMaterial({ color: 0x02050a }); // Очень Темно-синее небо
+
+    // Комната
+    const roomGeo = new THREE.BoxGeometry(20, 10, 20);
+    // Заменяем левую стену (индекс 1) на невидимую, чтобы сделать настоящую дыру для окна
+    const roomMesh = new THREE.Mesh(roomGeo, [wallMat, invMat, wallMat, floorMat, wallMat, wallMat]);
+    roomMesh.position.y = 5;
+    roomMesh.receiveShadow = true;
+    scene.add(roomMesh);
+
+    // Ручная сборка левой стены с проемом под окно (X = -10)
+    // Верхняя часть стены
+    const wallTop = new THREE.Mesh(new THREE.PlaneGeometry(20, 3), wallFrontMat);
+    wallTop.position.set(-10, 8.5, 0);
+    wallTop.rotation.y = Math.PI / 2;
+    wallTop.receiveShadow = true;
+    scene.add(wallTop);
+    // Нижняя часть стены
+    const wallBot = new THREE.Mesh(new THREE.PlaneGeometry(20, 3), wallFrontMat);
+    wallBot.position.set(-10, 1.5, 0);
+    wallBot.rotation.y = Math.PI / 2;
+    wallBot.receiveShadow = true;
+    scene.add(wallBot);
+    // Левая часть стены (от окна)
+    const wallLeft = new THREE.Mesh(new THREE.PlaneGeometry(7, 4), wallFrontMat);
+    wallLeft.position.set(-10, 5, -6.5);
+    wallLeft.rotation.y = Math.PI / 2;
+    wallLeft.receiveShadow = true;
+    scene.add(wallLeft);
+    // Правая часть стены (от окна)
+    const wallRight = new THREE.Mesh(new THREE.PlaneGeometry(7, 4), wallFrontMat);
+    wallRight.position.set(-10, 5, 6.5);
+    wallRight.rotation.y = Math.PI / 2;
+    wallRight.receiveShadow = true;
+    scene.add(wallRight);
+
+    // Освещение (Заполняющий свет + Основная лампочка)
+    ambientLight = new THREE.AmbientLight(0x404050, 0.8); // Более светлый фоновый свет
+    scene.add(ambientLight);
+
+    mainLight = new THREE.PointLight(0xffdfa0, 1.2, 30); // Сделал ярче (1.2 вместо 0.9)
+    mainLight.position.set(0, 9, 0);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 1024;
+    mainLight.shadow.mapSize.height = 1024;
+    scene.add(mainLight);
+
+    // Внешний мир (Небо глубоко за окном)
+    const skyGeo = new THREE.PlaneGeometry(80, 50);
+    const skyMesh = new THREE.Mesh(skyGeo, windowMat);
+    skyMesh.position.set(-25, 5, 0); // Подвинули ближе
+    skyMesh.rotation.y = Math.PI / 2;
+    scene.add(skyMesh);
+    
+    // ДОБАВЛЕНО: Луна на небе
+    const moonGeo = new THREE.CircleGeometry(1.5, 32);
+    const moonMat = new THREE.MeshBasicMaterial({ color: 0xaaaa99, transparent: true, opacity: 0.8 });
+    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+    moonMesh.position.set(-24.9, 10, -6); // Подвинули ближе и чуть ниже
+    moonMesh.rotation.y = Math.PI / 2;
+    scene.add(moonMesh);
+    
+    // Звезды на небе
+    const starsGeo = new THREE.BufferGeometry();
+    const starsCount = 400;
+    const starsPos = new Float32Array(starsCount * 3);
+    for(let i = 0; i < starsCount; i++) {
+        starsPos[i*3] = -24.8 + Math.random() * 0.2; // X: подвинули ближе вместе с луной
+        starsPos[i*3+1] = Math.random() * 50 - 5;    // Y: высота
+        starsPos[i*3+2] = Math.random() * 80 - 40;   // Z: ширина
+    }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPos, 3));
+    const starsMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.05, transparent: true, opacity: 0.7});
+    const stars = new THREE.Points(starsGeo, starsMat);
+    scene.add(stars);
+
+    // Стекло в окне (БЕЗ отражений)
+    const glassMat = new THREE.MeshBasicMaterial({ color: 0x050505, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
+    const glassMesh = new THREE.Mesh(new THREE.PlaneGeometry(6, 4), glassMat);
+    glassMesh.position.set(-10, 5, 0);
+    glassMesh.rotation.y = Math.PI / 2;
+    scene.add(glassMesh);
+
+    // Рама окна (по краям проема)
+    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 6.4), woodMat);
+    frameTop.position.set(-9.9, 7.1, 0);
+    scene.add(frameTop);
+    const frameBot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 6.4), woodMat);
+    frameBot.position.set(-9.9, 2.9, 0);
+    scene.add(frameBot);
+    const frameSide1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4.0, 0.2), woodMat);
+    frameSide1.position.set(-9.9, 5, -3.1);
+    scene.add(frameSide1);
+    const frameSide2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4.0, 0.2), woodMat);
+    frameSide2.position.set(-9.9, 5, 3.1);
+    scene.add(frameSide2);
+
+    // Перекладины (Крестовина окна)
+    const barGeo1 = new THREE.BoxGeometry(0.1, 4.0, 0.1);
+    const barMesh1 = new THREE.Mesh(barGeo1, woodMat);
+    barMesh1.position.set(-9.95, 5, 0);
+    scene.add(barMesh1);
+    const barGeo2 = new THREE.BoxGeometry(0.1, 0.1, 6.0);
+    const barMesh2 = new THREE.Mesh(barGeo2, woodMat);
+    barMesh2.position.set(-9.95, 5, 0);
+    scene.add(barMesh2);
+
+    // Монстр за окном (теперь между стеклом и небом)
+    const monsterGroup = new THREE.Group();
+    const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 16), blackMat);
+    head.position.y = 2.2;
+    monsterGroup.add(head);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.2, 4, 8), blackMat);
+    monsterGroup.add(body);
+    // Светящие глаза монстра
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), eyeMat);
+    leftEye.position.set(0.6, 2.3, -0.25);
+    monsterGroup.add(leftEye);
+    const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), eyeMat);
+    rightEye.position.set(0.6, 2.3, 0.25);
+    monsterGroup.add(rightEye);
+    // Красное свечение от глаз
+    const eyeLight = new THREE.PointLight(0xff0000, 3, 10);
+    eyeLight.position.set(0.8, 2.3, 0);
+    monsterGroup.add(eyeLight);
+
+    monsterMesh = monsterGroup;
+    monsterMesh.position.set(-11.5, 3.0, 0); // Прячется за окном
+    monsterMesh.visible = false;
+    scene.add(monsterMesh);
+
+    // Телевизор (Тумба + Экран) Z = -9
+    const tvBaseGeo = new THREE.BoxGeometry(4, 2, 2);
+    const tvBase = new THREE.Mesh(tvBaseGeo, woodMat);
+    tvBase.position.set(0, 1, -9);
+    tvBase.castShadow = true;
+    scene.add(tvBase);
+
+    const tvBodyGeo = new THREE.BoxGeometry(3, 2.5, 1.5);
+    tvMesh = new THREE.Mesh(tvBodyGeo, metalMat);
+    tvMesh.position.set(0, 3.25, -9);
+    tvMesh.castShadow = true;
+    scene.add(tvMesh);
+
+    tvScreenMat = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Изначально выключен
+    const tvScreenGeo = new THREE.PlaneGeometry(2.6, 2.0);
+    const tvScreen = new THREE.Mesh(tvScreenGeo, tvScreenMat);
+    tvScreen.position.set(0, 3.25, -8.24);
+    scene.add(tvScreen);
+
+    // Свет от ТВ (изначально 0)
+    tvLight = new THREE.PointLight(0xffffff, 0, 15);
+    tvLight.position.set(0, 3.5, -7);
+    scene.add(tvLight);
+
+    // Шкаф (для прятанья) X = 8, Z = -8
+    const wardGeo = new THREE.BoxGeometry(3, 8, 3);
+    wardrobeMesh = new THREE.Mesh(wardGeo, woodMat);
+    wardrobeMesh.position.set(8, 4, -8);
+    wardrobeMesh.castShadow = true;
+    wardrobeMesh.receiveShadow = true;
+    wardrobeMesh.userData = { type: 'wardrobe' };
+    scene.add(wardrobeMesh);
+
+    // Электрический щиток X = 0, Z = 9.9
+    const fuseGroup = new THREE.Group();
+    fuseGroup.position.set(0, 5, 9.85);
+    
+    // Корпус щитка
+    const fBase = new THREE.Mesh(new THREE.BoxGeometry(1.5, 2.2, 0.2), metalMat);
+    fBase.castShadow = true;
+    fuseGroup.add(fBase);
+
+    // Внутренняя темная панель
+    const fPanel = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 2.0), new THREE.MeshStandardMaterial({color: 0x111111}));
+    fPanel.position.set(0, 0, 0.105);
+    fuseGroup.add(fPanel);
+
+    // Маленькие черные тумблеры
+    const brGeo = new THREE.BoxGeometry(0.1, 0.3, 0.15);
+    const brMat = new THREE.MeshStandardMaterial({color: 0x050505});
+    for(let i=0; i<5; i++) {
+        let br = new THREE.Mesh(brGeo, brMat);
+        br.position.set(-0.4 + i*0.2, 0.4, 0.12);
+        fuseGroup.add(br);
+    }
+
+    // Главный рубильник (красный)
+    const mainSwGeo = new THREE.BoxGeometry(0.2, 0.5, 0.2);
+    const mainSwMat = new THREE.MeshStandardMaterial({color: 0x770000, roughness: 0.5}); 
+    const mainSwitch = new THREE.Mesh(mainSwGeo, mainSwMat);
+    mainSwitch.position.set(0.3, -0.4, 0.12);
+    mainSwitch.rotation.x = Math.PI / 4; // Изначально включен (вверх)
+    fuseGroup.add(mainSwitch);
+
+    // Желтая предупреждающая наклейка
+    const warnGeo = new THREE.PlaneGeometry(0.5, 0.3);
+    const warnMat = new THREE.MeshBasicMaterial({color: 0xaa8800}); 
+    const warn = new THREE.Mesh(warnGeo, warnMat);
+    warn.position.set(-0.3, -0.5, 0.11);
+    fuseGroup.add(warn);
+
+    scene.add(fuseGroup);
+
+    // Невидимый хитбокс для взаимодействия
+    fuseboxMesh = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.5, 0.5), new THREE.MeshBasicMaterial({visible: false}));
+    fuseboxMesh.position.copy(fuseGroup.position);
+    fuseboxMesh.userData = { type: 'fusebox', switchObj: mainSwitch };
+    scene.add(fuseboxMesh);
+
+    // Стол с запиской
+    const tableGeo = new THREE.BoxGeometry(2, 2.5, 2);
+    const table = new THREE.Mesh(tableGeo, woodMat);
+    table.position.set(-8, 1.25, -8);
+    table.castShadow = true;
+    scene.add(table);
+
+    const noteGeo = new THREE.PlaneGeometry(0.8, 1.1);
+    const noteMaterial = new THREE.MeshStandardMaterial({ color: 0xfffdd0 }); // Желтоватая бумага
+    noteMesh = new THREE.Mesh(noteGeo, noteMaterial);
+    noteMesh.position.set(-8, 2.51, -8);
+    noteMesh.rotation.x = -Math.PI / 2;
+    noteMesh.rotation.z = Math.random();
+    noteMesh.userData = { type: 'note' };
+    scene.add(noteMesh);
+
+    // Динамические часы на стене (Используем CanvasTexture)
+    const clockCanvas = document.createElement('canvas');
+    clockCanvas.width = 256; clockCanvas.height = 128;
+    clockCtx = clockCanvas.getContext('2d');
+    clockTex = new THREE.CanvasTexture(clockCanvas);
+    clockMat = new THREE.MeshBasicMaterial({ map: clockTex });
+    const clockMesh = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 0.1), clockMat);
+    clockMesh.position.set(-5, 7, -9.9);
+    scene.add(clockMesh);
+    updateClockTexture("00:00");
+}
+
+function updateClockTexture(timeStr) {
+    if (!clockCtx) return;
+    clockCtx.fillStyle = '#0a0a0a';
+    clockCtx.fillRect(0, 0, 256, 128);
+    
+    // Эффект свечения цифровых часов
+    clockCtx.shadowBlur = 10;
+    clockCtx.shadowColor = '#ff0000';
+    clockCtx.fillStyle = '#ff0000';
+    clockCtx.font = 'bold 80px "Courier New"';
+    clockCtx.textAlign = 'center';
+    clockCtx.textBaseline = 'middle';
+    clockCtx.fillText(timeStr, 128, 64);
+    clockCtx.shadowBlur = 0; // Сброс
+    
+    clockTex.needsUpdate = true;
+}
+
+/** ==========================================
+ * УПРАВЛЕНИЕ И ВЗАИМОДЕЙСТВИЕ
+ * ========================================== */
+function setupControls() {
+    document.addEventListener('mousemove', (e) => {
+        if (document.pointerLockElement === document.body && gameActive && !isHidden) {
+            yaw -= e.movementX * 0.002;
+            pitch -= e.movementY * 0.002;
+            pitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, pitch));
+            camera.rotation.set(pitch, yaw, 0, 'YXZ');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        const key = e.key.toLowerCase();
+        if (key === 'w' || key === 'ц') moveState.w = true;
+        if (key === 'a' || key === 'ф') moveState.a = true;
+        if (key === 's' || key === 'ы') moveState.s = true;
+        if (key === 'd' || key === 'в') moveState.d = true;
+    });
+
+    document.addEventListener('keyup', (e) => {
+        const key = e.key.toLowerCase();
+        if (key === 'w' || key === 'ц') moveState.w = false;
+        if (key === 'a' || key === 'ф') moveState.a = false;
+        if (key === 's' || key === 'ы') moveState.s = false;
+        if (key === 'd' || key === 'в') moveState.d = false;
+    });
+
+    document.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return; // Только ЛКМ
+        
+        // Скрытие записки при клике
+        const noteUI = document.getElementById('note-ui');
+        if (noteUI.style.display === 'block') {
+            noteUI.style.display = 'none';
+            return;
+        }
+
+        if (document.pointerLockElement !== document.body && gameActive && !isPaused) {
+            document.body.requestPointerLock();
+            return;
+        }
+
+        if (hoveredObject && gameActive && !isHidden && !isPaused) {
+            handleInteraction(hoveredObject);
+        }
+    });
+
+    // Обработчик паузы при выходе из PointerLock (нажатие ESC)
+    document.addEventListener('pointerlockchange', () => {
+        if (gameActive) {
+            if (document.pointerLockElement === document.body) {
+                // Возврат в игру
+                isPaused = false;
+                document.getElementById('pause-screen').style.display = 'none';
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            } else {
+                // Пауза (нажат ESC)
+                isPaused = true;
+                document.getElementById('pause-screen').style.display = 'flex';
+                if (audioCtx.state === 'running') audioCtx.suspend();
+            }
+        }
+    });
+}
+
+// Функция проверки коллизий с мебелью и стенами
+function checkCollision(pos) {
+    const pr = 0.8; // Радиус игрока (отступ от объектов)
+    
+    // Стены комнаты (границы -9 до 9)
+    if (pos.x < -9 + pr || pos.x > 9 - pr || pos.z < -9 + pr || pos.z > 9 - pr) return true;
+    
+    // Шкаф: центр (8, 4, -8), ширина 3, глубина 3
+    if (pos.x > 8 - 1.5 - pr && pos.x < 8 + 1.5 + pr && pos.z > -8 - 1.5 - pr && pos.z < -8 + 1.5 + pr) return true;
+    
+    // Тумбочка с ТВ: центр (0, 1, -9), ширина 4, глубина 2
+    if (pos.x > 0 - 2.0 - pr && pos.x < 0 + 2.0 + pr && pos.z > -9 - 1.0 - pr && pos.z < -9 + 1.0 + pr) return true;
+    
+    // Стол с запиской: центр (-8, 1.25, -8), ширина 2, глубина 2
+    if (pos.x > -8 - 1.0 - pr && pos.x < -8 + 1.0 + pr && pos.z > -8 - 1.0 - pr && pos.z < -8 + 1.0 + pr) return true;
+    
+    return false; // Нет коллизии
+}
+
+function handleInteraction(obj) {
+    const type = obj.userData.type;
+    
+    if (type === 'note') {
+        document.getElementById('note-ui').style.display = 'block';
+    } 
+    else if (type === 'wardrobe') {
+        if (currentEvent === EVENTS.TV) {
+            isHidden = true;
+            document.getElementById('blackout').style.display = 'flex';
+        }
+    }
+    else if (type === 'fusebox') {
+        playSwitchSound(); // Воспроизводим звук переключателя
+        if (currentEvent === EVENTS.FUSE) {
+            // Поднимаем рубильник вверх
+            if (obj.userData.switchObj) {
+                obj.userData.switchObj.rotation.x = Math.PI / 4;
+            }
+            endEvent();
+        }
+    }
+}
+
+/** ==========================================
+ * ИГРОВАЯ ЛОГИКА И СОБЫТИЯ
+ * ========================================== */
+function formatTime(seconds) {
+    // 0 сек = 00:00, 360 сек = 06:00. Каждые 60 сек = 1 час.
+    let h = Math.floor(seconds / 60);
+    let m = Math.floor((seconds % 60) * (60/60)); // Игровые минуты идут так же как реальные секунды в часе
+    return `0${h}:${m < 10 ? '0' : ''}${m}`;
+}
+
+function triggerRandomEvent() {
+    if (currentEvent !== EVENTS.NONE || isHidden) return;
+    
+    // Выбираем случайное событие, исключая то, которое было последним
+    let possibleEvents = [EVENTS.TV, EVENTS.WINDOW, EVENTS.FUSE];
+    possibleEvents = possibleEvents.filter(e => e !== lastEvent);
+    
+    const randIndex = Math.floor(Math.random() * possibleEvents.length);
+    const chosenEvent = possibleEvents[randIndex];
+    
+    lastEvent = chosenEvent; // Запоминаем для следующего раза
+
+    if (chosenEvent === EVENTS.TV) {
+        startEventTV();
+    } else if (chosenEvent === EVENTS.WINDOW) {
+        startEventWindow();
+    } else if (chosenEvent === EVENTS.FUSE) {
+        startEventFuse();
+    }
+}
+
+function startEventTV() {
+    currentEvent = EVENTS.TV;
+    eventTimer = 10; // 10 секунд чтобы спрятаться
+    tvScreenMat.color.setHex(0xffffff);
+    tvLight.intensity = 1.5;
+    playTVNoise(true);
+}
+
+function startEventWindow() {
+    currentEvent = EVENTS.WINDOW;
+    eventTimer = 5; // Событие длится 5 секунд
+    eventSubTimer = 0; // Время непрерывного взгляда на окно
+    monsterMesh.visible = true; // Показываем монстра
+    playKnock();
+}
+
+function startEventFuse() {
+    currentEvent = EVENTS.FUSE;
+    eventTimer = 15; // 15 секунд чтобы найти щиток
+    mainLight.intensity = 0.05; // Почти полная темнота
+    ambientLight.intensity = 0.02; // Выключаем фоновый свет
+    if (tvLight) tvLight.intensity = 0;
+    
+    // Опускаем рубильник вниз
+    if (fuseboxMesh.userData.switchObj) {
+        fuseboxMesh.userData.switchObj.rotation.x = -Math.PI / 4;
+    }
+}
+
+function endEvent() {
+    currentEvent = EVENTS.NONE;
+    tvScreenMat.color.setHex(0x000000);
+    tvLight.intensity = 0;
+    playTVNoise(false);
+    mainLight.intensity = 1.2; // Возвращаем новую яркость
+    ambientLight.intensity = 0.8; // Возвращаем новую яркость
+    monsterMesh.visible = false; // Прячем монстра
+    
+    if (isHidden) {
+        isHidden = false;
+        document.getElementById('blackout').style.display = 'none';
+    }
+    
+    // Планируем следующее событие через 10-20 секунд (было 30-50)
+    nextEventTriggerTime = gameTimeSeconds + 10 + Math.random() * 10;
+}
+
+function triggerGameOver() {
+    gameActive = false;
+    document.exitPointerLock();
+    playTVNoise(false);
+    playJumpscare();
+    
+    document.getElementById('game-over-screen').style.display = 'flex';
+    // Небольшая задержка для плавного появления красного экрана
+    setTimeout(() => { document.getElementById('game-over-screen').style.opacity = '1'; }, 50);
+}
+
+function triggerWin() {
+    gameActive = false;
+    document.exitPointerLock();
+    playTVNoise(false);
+    if(ambientOsc) ambientOsc.stop();
+    
+    mainLight.color.setHex(0xffaa55);
+    mainLight.intensity = 1.5;
+    ambientLight.color.setHex(0xffaa55);
+    ambientLight.intensity = 1.0;
+    scene.fog.color.setHex(0x332211);
+    
+    playWinSound();
+    
+    document.getElementById('win-screen').style.display = 'flex';
+    setTimeout(() => { document.getElementById('win-screen').style.opacity = '1'; }, 50);
+}
+
+function updateEvents(delta) {
+    if (currentEvent === EVENTS.NONE) return;
+
+    eventTimer -= delta;
+
+    switch (currentEvent) {
+        case EVENTS.TV:
+            if (eventTimer <= 0) {
+                if (isHidden) {
+                    endEvent(); // Выжил!
+                } else {
+                    triggerGameOver(); // Не спрятался
+                }
+            }
+            break;
+
+        case EVENTS.WINDOW:
+            // Анимация монстра
+            if (monsterMesh.visible) {
+                monsterMesh.position.y = 3.5 + Math.sin(Date.now() * 0.005) * 0.1;
+                monsterMesh.position.z = Math.sin(Date.now() * 0.002) * 0.3;
+            }
+
+            // Проверка, смотрит ли игрок в окно
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
+            const windowDir = new THREE.Vector3(-1, 0, 0); // Окно слева (X=-10)
+            
+            // Dot product оценивает совпадение направлений
+            if (camDir.dot(windowDir) > 0.7) { 
+                eventSubTimer += delta;
+                if (eventSubTimer > 1.0) { // Смотрел дольше 1 секунды
+                    triggerGameOver();
+                }
+            } else {
+                eventSubTimer = Math.max(0, eventSubTimer - delta * 2); // Быстро убывает если отвернулся
+            }
+
+            if (eventTimer <= 0) {
+                endEvent(); // Успешно проигнорировал окно
+            }
+            break;
+
+        case EVENTS.FUSE:
+            if (eventTimer <= 0) {
+                triggerGameOver(); // Не успел включить свет
+            }
+            break;
+    }
+}
+
+/** ==========================================
+ * ГЛАВНЫЙ ЦИКЛ (Update & Render)
+ * ========================================== */
+const clock = new THREE.Clock();
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    const delta = clock.getDelta();
+
+    if (gameActive && !isPaused) {
+        // --- Обновление времени ---
+        gameTimeSeconds += delta;
+        updateClockTexture(formatTime(gameTimeSeconds));
+
+        if (gameTimeSeconds >= MAX_TIME) {
+            triggerWin();
+        }
+
+        // --- Триггер новых событий ---
+        if (gameTimeSeconds >= nextEventTriggerTime && currentEvent === EVENTS.NONE) {
+            triggerRandomEvent();
+        }
+
+        // --- Обновление текущего события ---
+        updateEvents(delta);
+
+        // --- Движение игрока ---
+        if (!isHidden) {
+            const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+            const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+            
+            const moveVec = new THREE.Vector3();
+            if (moveState.w) moveVec.add(forward);
+            if (moveState.s) moveVec.sub(forward);
+            if (moveState.a) moveVec.sub(right);
+            if (moveState.d) moveVec.add(right);
+            
+            moveVec.normalize().multiplyScalar(playerSpeed * delta);
+            
+            // Проверка коллизий и движение (отдельно по осям для скольжения вдоль объектов)
+            const testX = camera.position.clone();
+            testX.x += moveVec.x;
+            if (!checkCollision(testX)) camera.position.x += moveVec.x;
+
+            const testZ = camera.position.clone();
+            testZ.z += moveVec.z;
+            if (!checkCollision(testZ)) camera.position.z += moveVec.z;
+
+            // --- Рейкастинг для взаимодействия ---
+            raycaster.setFromCamera(centerVector, camera);
+            const intersects = raycaster.intersectObjects([wardrobeMesh, fuseboxMesh, noteMesh]);
+            
+            const hint = document.getElementById('interaction-hint');
+            if (intersects.length > 0 && intersects[0].distance < 4.0) {
+                hoveredObject = intersects[0].object;
+                let text = "";
+                if (hoveredObject.userData.type === 'note') text = "ЛКМ - Читать записку";
+                else if (hoveredObject.userData.type === 'wardrobe') text = "ЛКМ - Спрятаться";
+                else if (hoveredObject.userData.type === 'fusebox') text = "ЛКМ - Включить щиток";
+                
+                hint.innerText = text;
+                hint.style.display = 'block';
+            } else {
+                hoveredObject = null;
+                hint.style.display = 'none';
+            }
+        }
+    } // Конец if (gameActive && !isPaused)
+
+    // --- Рендеринг с постпроцессингом ---
+    renderer.setRenderTarget(renderTarget);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    
+    postMaterial.uniforms.time.value += delta;
+    renderer.render(postScene, postCamera);
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderTarget.setSize(window.innerWidth, window.innerHeight);
+}
+
+/** ==========================================
+ * ИНИЦИАЛИЗАЦИЯ
+ * ========================================== */
+document.getElementById('btn-start').addEventListener('click', () => {
+    document.getElementById('start-screen').style.display = 'none';
+    initAudio();
+    init3D();
+    gameActive = true;
+    clock.start();
+    document.body.requestPointerLock();
+    animate();
+});
+
+function resetGame() {
+    // Сброс времени и логики
+    gameTimeSeconds = 0;
+    currentEvent = EVENTS.NONE;
+    lastEvent = EVENTS.NONE; // Сбрасываем память событий
+    isHidden = false;
+    isPaused = false;
+    eventTimer = 0;
+    eventSubTimer = 0;
+    nextEventTriggerTime = 45;
+    
+    // Сброс рубильника
+    if (fuseboxMesh && fuseboxMesh.userData.switchObj) {
+        fuseboxMesh.userData.switchObj.rotation.x = Math.PI / 4;
+    }
+
+    // Сброс игрока
+    pitch = 0; yaw = 0;
+    camera.position.set(0, 5, 0);
+    camera.rotation.set(0, 0, 0);
+    
+    // Сброс визуала сцены
+    tvScreenMat.color.setHex(0x000000);
+    tvLight.intensity = 0;
+    mainLight.color.setHex(0xffdfa0);
+    mainLight.intensity = 1.2;
+    ambientLight.color.setHex(0x404050);
+    ambientLight.intensity = 0.8;
+    scene.fog.color.setHex(0x040404);
+    if (monsterMesh) monsterMesh.visible = false;
+    
+    // Сброс UI
+    document.getElementById('game-over-screen').style.display = 'none';
+    document.getElementById('game-over-screen').style.opacity = '0';
+    document.getElementById('win-screen').style.display = 'none';
+    document.getElementById('win-screen').style.opacity = '0';
+    document.getElementById('blackout').style.display = 'none';
+    document.getElementById('pause-screen').style.display = 'none';
+    
+    // Сброс Аудио
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    playTVNoise(false);
+    if (ambientOsc) {
+        try { ambientOsc.stop(); } catch(e){}
+    }
+    initAudio(); // Перезапуск фонового гула
+    
+    updateClockTexture("00:00");
+    
+    gameActive = true;
+    document.body.requestPointerLock();
+}
+
+document.getElementById('btn-restart').addEventListener('click', resetGame);
+document.getElementById('btn-restart-win').addEventListener('click', resetGame);
+
+document.getElementById('btn-resume').addEventListener('click', () => {
+    document.body.requestPointerLock();
+});
+
+</script>
+</body>
+</html>
