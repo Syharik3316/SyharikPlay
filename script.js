@@ -7,9 +7,9 @@ window.gamesRegistry = window.gamesRegistry || {};
 window.gamesRegistry.sort = window.gamesRegistry.sort || {
   id: 'sort',
   title: 'Сортировки',
-  description: 'Наглядная визуализация алгоритмов сортировки с настройкой скорости, размера массива и звука.',
+  description: 'Наглядная визуализация алгоритмов сортировки с гибкой настройкой.',
   genre: 'Обучение',
-  difficulty: 'Средняя',
+  difficulty: 'Авто',
   shortcode: 'SORT',
   url: 'sort.html'
 };
