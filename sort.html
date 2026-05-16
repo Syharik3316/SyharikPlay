@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SyharikPlay - Визуализация сортировок</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        .sorting-page main {
+            position: relative;
+            z-index: 1;
+        }
+
+        .sorting-page .sorting-section,
+        .sorting-page .footer-inner,
+        .sorting-page .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .sorting-section {
+            padding: 4.75rem 2rem 4rem;
+        }
+
+        .section-heading {
+            margin-bottom: 1.75rem;
+        }
+
+        .section-heading > div {
+            display: grid;
+            justify-items: center;
+            text-align: center;
+        }
+
+        .section-heading p {
+            max-width: 760px;
+            color: var(--text-secondary);
+        }
+
+        .sorting-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1.5rem;
+        }
+
+        .sorting-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 25px 60px var(--shadow);
+            min-width: 0;
+        }
+
+        .controls-panel {
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .controls-panel-header {
+            flex: 1 1 100%;
+            display: grid;
+            justify-items: center;
+            margin-bottom: 0.15rem;
+        }
+
+        .panel-badge {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            border-radius: 999px;
+            padding: 0.45rem 0.85rem;
+            background: rgba(201, 162, 39, 0.14);
+            border: 1px solid rgba(201, 162, 39, 0.24);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 2.2vw, 2rem);
+            line-height: 1.05;
+        }
+
+        .panel-text {
+            color: var(--text-secondary);
+            max-width: 420px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            gap: 1rem;
+            flex: 2 1 520px;
+            min-width: min(100%, 520px);
+            width: 100%;
+        }
+
+        .control-group {
+            display: grid;
+            gap: 0.6rem;
+            min-width: 0;
+        }
+
+        .control-group label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .control-group select,
+        .control-group input[type="range"] {
+            width: 100%;
+        }
+
+        .control-group select {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 0.95rem 1rem;
+            font: inherit;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.12);
+        }
+
+        .control-group input[type="range"] {
+            appearance: none;
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(201, 162, 39, 0.9), rgba(201, 162, 39, 0.25));
+            cursor: pointer;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            background: linear-gradient(180deg, #f5d979 0%, var(--accent) 100%);
+            box-shadow: 0 6px 16px rgba(201, 162, 39, 0.28);
+        }
+
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            background: linear-gradient(180deg, #f5d979 0%, var(--accent) 100%);
+            box-shadow: 0 6px 16px rgba(201, 162, 39, 0.28);
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            flex: 1 1 100%;
+            width: 100%;
+        }
+
+        .buttons button {
+            flex: 1 1 0;
+            min-height: 52px;
+            min-width: 0;
+            border-radius: 16px;
+            border: 1px solid transparent;
+            padding: 0.9rem 1.1rem;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+        }
+
+        .buttons button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f1d15f 0%, var(--accent) 100%);
+            color: #1a1407;
+            box-shadow: 0 16px 28px rgba(201, 162, 39, 0.28);
+        }
+
+        .btn-secondary,
+        .btn-sound {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border-color: var(--border);
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .btn-secondary,
+        [data-theme="dark"] .btn-sound {
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+        }
+
+        .btn-sound.active {
+            background: linear-gradient(135deg, rgba(201, 162, 39, 0.22), rgba(201, 162, 39, 0.44));
+            border-color: rgba(201, 162, 39, 0.38);
+            color: var(--text-primary);
+        }
+
+        .buttons button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-notes {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.8rem;
+            flex: 1 1 100%;
+        }
+
+        .note-card {
+            padding: 1rem 1.1rem;
+            border-radius: 20px;
+            background: rgba(201, 162, 39, 0.08);
+            border: 1px solid rgba(201, 162, 39, 0.16);
+        }
+
+        .note-card strong {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-size: 0.95rem;
+        }
+
+        .workspace-panel {
+            padding: 1.5rem;
+            display: grid;
+            gap: 1rem;
+            min-width: 0;
+        }
+
+        .workspace-topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .workspace-topline h2 {
+            font-size: 1.2rem;
+        }
+
+        .workspace-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .workspace-topline > div:first-child {
+            min-width: 0;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            background: rgba(201, 162, 39, 0.14);
+            border: 1px solid rgba(201, 162, 39, 0.24);
+            font-weight: 600;
+            color: var(--text-primary);
+            max-width: 100%;
+            white-space: normal;
+            text-align: center;
+        }
+
+        .visualization-shell {
+            padding: 1rem;
+            border-radius: 24px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent),
+                rgba(10, 10, 12, 0.02);
+            border: 1px solid var(--border);
+            min-width: 0;
+        }
+
+        .visualization {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            min-height: 560px;
+            gap: 3px;
+            padding: 1rem;
+            overflow: hidden;
+            border-radius: 20px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 30%),
+                linear-gradient(180deg, rgba(201, 162, 39, 0.08), rgba(201, 162, 39, 0.03)),
+                rgba(11, 13, 18, 0.06);
+        }
+
+        [data-theme="dark"] .visualization {
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
+                linear-gradient(180deg, rgba(232, 197, 71, 0.08), rgba(232, 197, 71, 0.02)),
+                rgba(0, 0, 0, 0.22);
+        }
+
+        .bar {
+            flex: 1;
+            min-width: 4px;
+            background: linear-gradient(180deg, #f5d979 0%, var(--accent) 100%);
+            border-radius: 10px 10px 3px 3px;
+            box-shadow: 0 12px 28px rgba(201, 162, 39, 0.2);
+            transition: height 0.12s ease, filter 0.12s ease, transform 0.12s ease;
+        }
+
+        .bar.compare {
+            background: linear-gradient(180deg, #7bc4ff 0%, #3587ff 100%);
+            box-shadow: 0 12px 28px rgba(53, 135, 255, 0.24);
+            transform: translateY(-4px);
+        }
+
+        .bar.swap {
+            background: linear-gradient(180deg, #ffd978 0%, #f5a524 100%);
+            box-shadow: 0 12px 28px rgba(245, 165, 36, 0.24);
+            transform: translateY(-6px);
+        }
+
+        .bar.sorted {
+            background: linear-gradient(180deg, #8ef0b0 0%, #2fb66c 100%);
+            box-shadow: 0 12px 28px rgba(47, 182, 108, 0.24);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            padding: 1rem 1.1rem;
+            border-radius: 20px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.45rem;
+        }
+
+        .stat-value {
+            font-size: clamp(1.45rem, 2vw, 2rem);
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .status {
+            padding: 1rem 1.2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(201, 162, 39, 0.2);
+            background: rgba(201, 162, 39, 0.08);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .info-card {
+            padding: 1.4rem;
+            border-radius: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: 0 22px 45px var(--shadow);
+        }
+
+        .info-card h3 {
+            margin-bottom: 0.7rem;
+            font-size: 1.1rem;
+        }
+
+        .info-card p,
+        .info-card li {
+            color: var(--text-secondary);
+        }
+
+        .legend-list,
+        .tips-list {
+            list-style: none;
+            display: grid;
+            gap: 0.7rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .legend-swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            flex: 0 0 auto;
+        }
+
+        .legend-swatch.default { background: linear-gradient(180deg, #f5d979 0%, var(--accent) 100%); }
+        .legend-swatch.compare { background: linear-gradient(180deg, #7bc4ff 0%, #3587ff 100%); }
+        .legend-swatch.swap { background: linear-gradient(180deg, #ffd978 0%, #f5a524 100%); }
+        .legend-swatch.sorted { background: linear-gradient(180deg, #8ef0b0 0%, #2fb66c 100%); }
+
+        .footer-note {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 0.4rem;
+        }
+
+        @media (max-width: 1024px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                grid-template-columns: repeat(2, minmax(180px, 1fr));
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .visualization {
+                min-height: 480px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sorting-section {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .sorting-section {
+                padding-top: 4rem;
+            }
+
+            .controls-panel {
+                display: grid;
+                padding: 1rem;
+                gap: 0.9rem;
+            }
+
+            .controls,
+            .control-notes {
+                grid-template-columns: 1fr;
+                min-width: 0;
+            }
+
+            .visualization {
+                min-height: 340px;
+                gap: 2px;
+                padding: 0.75rem;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .buttons button {
+                width: 100%;
+                flex: 1 1 auto;
+            }
+
+            .workspace-topline {
+                align-items: flex-start;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .sorting-section {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+
+            .sorting-card,
+            .visualization-shell,
+            .status,
+            .stat-item,
+            .info-card {
+                border-radius: 20px;
+            }
+
+            .controls-panel,
+            .workspace-panel {
+                padding: 0.9rem;
+            }
+
+            .visualization {
+                min-height: 300px;
+                padding: 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body class="sorting-page">
+    <div class="glow-orb-wrap" data-orb="1"><div class="glow-orb glow-orb-1"></div></div>
+    <div class="glow-orb-wrap" data-orb="2"><div class="glow-orb glow-orb-2"></div></div>
+    <div class="glow-orb-wrap" data-orb="3"><div class="glow-orb glow-orb-3"></div></div>
+    <div class="glow-orb-wrap" data-orb="4"><div class="glow-orb glow-orb-4"></div></div>
+    <div class="grid-pattern" id="gridPattern"></div>
+    <div class="click-ripples" id="clickRipples"></div>
+
+    <header class="header">
+        <div class="header-inner">
+            <a href="index.html" class="logo" aria-label="На главную SyharikPlay">
+                <img class="logo-icon" src="favicon.ico" width="32" height="32" alt="">
+                <span class="logo-text">SyharikPlay</span>
+            </a>
+
+            <div class="nav-overlay" id="navOverlay" aria-hidden="true"></div>
+            <button class="nav-toggle" id="navToggle" aria-label="Меню" aria-expanded="false">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
+
+            <nav class="nav" id="nav">
+                <a href="index.html" class="nav-link">На главную</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+                    <span class="theme-icon theme-icon-sun">☀</span>
+                    <span class="theme-icon theme-icon-moon">☽</span>
+                    <span class="theme-toggle-track"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="sorting-section" id="playground">
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Интерактивная сцена сортировки</h2>
+                    <p>
+                        Выбирай алгоритм, настраивай размер массива и скорость, а потом наблюдай, как сравнения,
+                        перестановки и финальная упорядоченность складываются в понятную анимацию.
+                    </p>
+                </div>
+            </div>
+
+            <div class="sorting-shell">
+                <aside class="sorting-card controls-panel">
+                    <div class="controls-panel-header">
+                        <span class="panel-badge">Настройки запуска</span>
+                    </div>
+
+                    <div class="controls">
+                        <div class="control-group">
+                            <label for="algorithm">Алгоритм</label>
+                            <select id="algorithm">
+                                <option value="bubble">Пузырьковая сортировка</option>
+                                <option value="selection">Сортировка выбором</option>
+                                <option value="insertion">Сортировка вставками</option>
+                                <option value="quick">Быстрая сортировка</option>
+                                <option value="merge">Сортировка слиянием</option>
+                                <option value="heap">Пирамидальная сортировка</option>
+                                <option value="shell">Сортировка Шелла</option>
+                                <option value="cocktail">Коктейльная сортировка</option>
+                                <option value="gnome">Гномья сортировка</option>
+                                <option value="oddEven">Чётно-нечётная сортировка</option>
+                                <option value="cycle">Циклическая сортировка</option>
+                                <option value="bogo">Bogo Sort</option>
+                                <option value="stooge">Stooge Sort</option>
+                                <option value="tanos">Сортировка Таноса</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="arraySize">Размер массива: <span id="sizeValue">50</span></label>
+                            <input type="range" id="arraySize" min="5" max="100" value="50">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="speed">Скорость: <span id="speedValue">50</span></label>
+                            <input type="range" id="speed" min="1" max="100" value="50">
+                        </div>
+                    </div>
+
+                    <div class="buttons">
+                        <button class="btn-primary" id="startBtn">Старт</button>
+                        <button class="btn-secondary" id="resetBtn">Сброс</button>
+                        <button class="btn-secondary" id="newArrayBtn">Новый массив</button>
+                        <button class="btn-sound active" id="soundBtn">Звук: вкл</button>
+                    </div>
+
+                    <div class="control-notes">
+                        <div class="note-card">
+                            <strong>Для сложных алгоритмов</strong>
+                            Уменьши размер массива, если запускаешь Bogo, Stooge или сортировку Таноса.
+                        </div>
+                        <div class="note-card">
+                            <strong>Для наглядности</strong>
+                            На средней скорости проще замечать, когда алгоритм сравнивает элементы и когда реально меняет их местами.
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="sorting-card workspace-panel" aria-label="Зона визуализации">
+                    <div class="workspace-topline">
+                        <div>
+                            <h2>Живая диаграмма массива</h2>
+                            <p class="workspace-subtitle">Следи за ходом алгоритма по цветам, счётчикам и текущему статусу.</p>
+                        </div>
+                        <div class="status-chip" id="algorithmStatus">Выберите алгоритм и нажмите Старт</div>
+                    </div>
+
+                    <div class="visualization-shell">
+                        <div class="visualization" id="visualization"></div>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Сравнения</div>
+                            <div class="stat-value" id="comparisons">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Обмены</div>
+                            <div class="stat-value" id="swaps">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Время (мс)</div>
+                            <div class="stat-value" id="time">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Статус</div>
+                            <div class="stat-value" id="status">Готов</div>
+                        </div>
+                    </div>
+
+                    <div class="status">
+                        Выбранный алгоритм будет отображаться здесь же по ходу выполнения. После завершения можно сразу собрать новый массив и сравнить результат с другим методом.
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <section class="sorting-section" id="insights">
+            <div class="section-heading">
+                <div>
+                    <h2 class="section-title">Что означают цвета и режимы</h2>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <article class="info-card">
+                    <h3>Легенда визуализации</h3>
+                    <ul class="legend-list">
+                        <li class="legend-item"><span class="legend-swatch default"></span><span>Обычное состояние элементов массива.</span></li>
+                        <li class="legend-item"><span class="legend-swatch compare"></span><span>Сейчас идёт сравнение двух значений.</span></li>
+                        <li class="legend-item"><span class="legend-swatch swap"></span><span>Алгоритм переставляет элементы местами.</span></li>
+                        <li class="legend-item"><span class="legend-swatch sorted"></span><span>Элемент или участок уже на правильной позиции.</span></li>
+                    </ul>
+                </article>
+
+                <article class="info-card">
+                    <h3>Быстрые советы</h3>
+                    <ul class="tips-list">
+                        <li>Для визуального сравнения начни с Bubble, Insertion и Selection.</li>
+                        <li>Quick и Merge хорошо показывают разницу между простыми и более эффективными подходами.</li>
+                        <li>Включённый звук помогает ощутить частоту сравнений и обменов как ритм.</li>
+                    </ul>
+                </article>
+
+                <article class="info-card">
+                    <h3>Переходы по проекту</h3>
+                    <p>
+                        На главной сортировка появится как отдельная карточка рядом с остальными играми и экспериментами.
+                        Отсюда тоже можно быстро вернуться обратно в каталог.
+                    </p>
+                    <div class="hero-actions" style="margin-top: 1rem;">
+                        <a href="index.html#games" class="btn btn-primary">Открыть все игры</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer" id="contact">
+        <div class="footer-glow"></div>
+        <div class="footer-inner">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="index.html" class="footer-logo">
+                        <img class="logo-icon" src="favicon.ico" width="32" height="32" alt="">
+                        SyharikPlay
+                    </a>
+                    <p class="footer-tagline">Эксперименты, мини-игры и интерактивные страницы в одном стиле.</p>
+                </div>
+
+                <div class="footer-links">
+                    <h4>Разделы</h4>
+                    <a href="#playground">Визуализация</a>
+                    <a href="#insights">Подсказки</a>
+                </div>
+
+                <div class="footer-links">
+                    <h4>Навигация</h4>
+                    <a href="index.html#games">Все игры</a>
+                    <a href="index.html#features">Возможности</a>
+                    <a href="index.html#about">О проекте</a>
+                </div>
+
+                <div class="footer-social">
+                    <h4>Быстрый переход</h4>
+                    <div class="social-links">
+                        <a href="index.html#games" class="social-link" aria-label="Каталог игр">⌂</a>
+                        <a href="https://github.com/Syharik3316/SyharikPlay" class="social-link" aria-label="GitHub">◉</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        let audioContext = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(frequency, duration = 0.1, type = 'sine') {
+            if (!soundEnabled || !audioContext) return;
+
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log('Audio error:', e);
+            }
+        }
+
+        function playCompareSound() {
+            playSound(400 + Math.random() * 200, 0.05, 'sine');
+        }
+
+        function playSwapSound() {
+            playSound(300 + Math.random() * 100, 0.08, 'triangle');
+        }
+
+        function playSortedSound() {
+            playSound(800, 0.1, 'sine');
+            setTimeout(() => playSound(1000, 0.1, 'sine'), 100);
+            setTimeout(() => playSound(1200, 0.2, 'sine'), 200);
+        }
+
+        let array = [];
+        let isSorting = false;
+        let shouldStop = false;
+        let comparisons = 0;
+        let swaps = 0;
+        let startTime = 0;
+
+        const visualization = document.getElementById('visualization');
+        const algorithmSelect = document.getElementById('algorithm');
+        const arraySizeInput = document.getElementById('arraySize');
+        const speedInput = document.getElementById('speed');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const newArrayBtn = document.getElementById('newArrayBtn');
+        const soundBtn = document.getElementById('soundBtn');
+        const sizeValue = document.getElementById('sizeValue');
+        const speedValue = document.getElementById('speedValue');
+        const comparisonsEl = document.getElementById('comparisons');
+        const swapsEl = document.getElementById('swaps');
+        const timeEl = document.getElementById('time');
+        const statusEl = document.getElementById('status');
+        const algorithmStatus = document.getElementById('algorithmStatus');
+
+        function init() {
+            createArray();
+            updateControls();
+            syncSoundButton();
+        }
+
+        function createArray() {
+            const size = parseInt(arraySizeInput.value, 10);
+            array = [];
+            for (let i = 0; i < size; i++) {
+                array.push(Math.floor(Math.random() * 300) + 20);
+            }
+            renderArray();
+        }
+
+        function renderArray(highlightIndices = [], type = '') {
+            visualization.innerHTML = '';
+            array.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${value}px`;
+
+                if (highlightIndices.includes(index)) {
+                    bar.classList.add(type);
+                }
+
+                visualization.appendChild(bar);
+            });
+        }
+
+        function updateControls() {
+            sizeValue.textContent = arraySizeInput.value;
+            speedValue.textContent = speedInput.value;
+        }
+
+        function getDelay() {
+            return 101 - parseInt(speedInput.value, 10);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function setAlgorithmMessage(message) {
+            algorithmStatus.textContent = message;
+        }
+
+        function syncSoundButton() {
+            soundBtn.classList.toggle('active', soundEnabled);
+            soundBtn.textContent = soundEnabled ? 'Звук: вкл' : 'Звук: выкл';
+        }
+
+        async function swap(i, j) {
+            if (shouldStop) throw new Error('Stopped');
+            [array[i], array[j]] = [array[j], array[i]];
+            swaps++;
+            swapsEl.textContent = swaps;
+            renderArray([i, j], 'swap');
+            playSwapSound();
+            await sleep(getDelay());
+        }
+
+        async function compare(i, j) {
+            if (shouldStop) throw new Error('Stopped');
+            comparisons++;
+            comparisonsEl.textContent = comparisons;
+            renderArray([i, j], 'compare');
+            playCompareSound();
+            await sleep(getDelay());
+        }
+
+        async function markSorted(indices) {
+            if (shouldStop) throw new Error('Stopped');
+            renderArray(indices, 'sorted');
+            await sleep(getDelay());
+        }
+
+        async function bubbleSort() {
+            const n = array.length;
+            for (let i = 0; i < n - 1; i++) {
+                for (let j = 0; j < n - i - 1; j++) {
+                    await compare(j, j + 1);
+                    if (array[j] > array[j + 1]) {
+                        await swap(j, j + 1);
+                    }
+                }
+                await markSorted([n - i - 1]);
+            }
+            await markSorted([0]);
+        }
+
+        async function selectionSort() {
+            const n = array.length;
+            for (let i = 0; i < n - 1; i++) {
+                let minIdx = i;
+                for (let j = i + 1; j < n; j++) {
+                    await compare(minIdx, j);
+                    if (array[j] < array[minIdx]) {
+                        minIdx = j;
+                    }
+                }
+                if (minIdx !== i) {
+                    await swap(i, minIdx);
+                }
+                await markSorted([i]);
+            }
+            await markSorted([n - 1]);
+        }
+
+        async function insertionSort() {
+            const n = array.length;
+            for (let i = 1; i < n; i++) {
+                const key = array[i];
+                let j = i - 1;
+
+                while (j >= 0) {
+                    await compare(j, j + 1);
+                    if (array[j] > key) {
+                        array[j + 1] = array[j];
+                        swaps++;
+                        swapsEl.textContent = swaps;
+                        renderArray([j, j + 1], 'swap');
+                        playSwapSound();
+                        await sleep(getDelay());
+                        j--;
+                    } else {
+                        break;
+                    }
+                }
+                array[j + 1] = key;
+                renderArray();
+                await markSorted([i]);
+            }
+        }
+
+        async function quickSort(low = 0, high = array.length - 1) {
+            if (low < high && !shouldStop) {
+                const pi = await partition(low, high);
+                await quickSort(low, pi - 1);
+                await quickSort(pi + 1, high);
+            } else if (low >= 0 && high < array.length && low <= high) {
+                await markSorted([low]);
+            }
+        }
+
+        async function partition(low, high) {
+            const pivot = array[high];
+            let i = low - 1;
+
+            for (let j = low; j < high; j++) {
+                await compare(j, high);
+                if (array[j] < pivot) {
+                    i++;
+                    await swap(i, j);
+                }
+            }
+            await swap(i + 1, high);
+            return i + 1;
+        }
+
+        async function mergeSort(l = 0, r = array.length - 1) {
+            if (l >= r || shouldStop) return;
+
+            const m = Math.floor((l + r) / 2);
+            await mergeSort(l, m);
+            await mergeSort(m + 1, r);
+            await merge(l, m, r);
+
+            for (let i = l; i <= r; i++) {
+                await markSorted([i]);
+            }
+        }
+
+        async function merge(l, m, r) {
+            const n1 = m - l + 1;
+            const n2 = r - m;
+            const leftArr = array.slice(l, m + 1);
+            const rightArr = array.slice(m + 1, r + 1);
+
+            let i = 0;
+            let j = 0;
+            let k = l;
+
+            while (i < n1 && j < n2) {
+                await compare(l + i, m + 1 + j);
+                if (leftArr[i] <= rightArr[j]) {
+                    array[k] = leftArr[i];
+                    i++;
+                } else {
+                    array[k] = rightArr[j];
+                    j++;
+                }
+                swaps++;
+                swapsEl.textContent = swaps;
+                renderArray([k], 'swap');
+                playSwapSound();
+                await sleep(getDelay());
+                k++;
+            }
+
+            while (i < n1) {
+                array[k] = leftArr[i];
+                swaps++;
+                swapsEl.textContent = swaps;
+                renderArray([k], 'swap');
+                playSwapSound();
+                await sleep(getDelay());
+                i++;
+                k++;
+            }
+
+            while (j < n2) {
+                array[k] = rightArr[j];
+                swaps++;
+                swapsEl.textContent = swaps;
+                renderArray([k], 'swap');
+                playSwapSound();
+                await sleep(getDelay());
+                j++;
+                k++;
+            }
+        }
+
+        async function heapSort() {
+            const n = array.length;
+
+            for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+                await heapify(n, i);
+            }
+
+            for (let i = n - 1; i > 0; i--) {
+                await swap(0, i);
+                await heapify(i, 0);
+                await markSorted([i]);
+            }
+            await markSorted([0]);
+        }
+
+        async function heapify(n, i) {
+            let largest = i;
+            const left = 2 * i + 1;
+            const right = 2 * i + 2;
+
+            if (left < n) {
+                await compare(largest, left);
+                if (array[left] > array[largest]) {
+                    largest = left;
+                }
+            }
+
+            if (right < n) {
+                await compare(largest, right);
+                if (array[right] > array[largest]) {
+                    largest = right;
+                }
+            }
+
+            if (largest !== i) {
+                await swap(i, largest);
+                await heapify(n, largest);
+            }
+        }
+
+        async function shellSort() {
+            const n = array.length;
+            let gap = Math.floor(n / 2);
+
+            while (gap > 0) {
+                for (let i = gap; i < n; i++) {
+                    const temp = array[i];
+                    let j = i;
+
+                    while (j >= gap) {
+                        await compare(j, j - gap);
+                        if (array[j - gap] > temp) {
+                            array[j] = array[j - gap];
+                            swaps++;
+                            swapsEl.textContent = swaps;
+                            renderArray([j, j - gap], 'swap');
+                            playSwapSound();
+                            await sleep(getDelay());
+                            j -= gap;
+                        } else {
+                            break;
+                        }
+                    }
+                    array[j] = temp;
+                }
+                gap = Math.floor(gap / 2);
+            }
+
+            for (let i = 0; i < n; i++) {
+                await markSorted([i]);
+            }
+        }
+
+        async function cocktailSort() {
+            const n = array.length;
+            let start = 0;
+            let end = n - 1;
+            let swapped = true;
+
+            while (swapped) {
+                swapped = false;
+
+                for (let i = start; i < end; i++) {
+                    await compare(i, i + 1);
+                    if (array[i] > array[i + 1]) {
+                        await swap(i, i + 1);
+                        swapped = true;
+                    }
+                }
+
+                if (!swapped) break;
+
+                swapped = false;
+                end--;
+                await markSorted([end + 1]);
+
+                for (let i = end - 1; i >= start; i--) {
+                    await compare(i, i + 1);
+                    if (array[i] > array[i + 1]) {
+                        await swap(i, i + 1);
+                        swapped = true;
+                    }
+                }
+
+                start++;
+                await markSorted([start - 1]);
+            }
+        }
+
+        async function gnomeSort() {
+            const n = array.length;
+            let index = 0;
+
+            while (index < n) {
+                if (index === 0) {
+                    index++;
+                    continue;
+                }
+
+                await compare(index - 1, index);
+                if (array[index - 1] <= array[index]) {
+                    index++;
+                } else {
+                    await swap(index - 1, index);
+                    index--;
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                await markSorted([i]);
+            }
+        }
+
+        async function oddEvenSort() {
+            const n = array.length;
+            let sorted = false;
+
+            while (!sorted) {
+                sorted = true;
+
+                for (let i = 1; i < n - 1; i += 2) {
+                    await compare(i, i + 1);
+                    if (array[i] > array[i + 1]) {
+                        await swap(i, i + 1);
+                        sorted = false;
+                    }
+                }
+
+                for (let i = 0; i < n - 1; i += 2) {
+                    await compare(i, i + 1);
+                    if (array[i] > array[i + 1]) {
+                        await swap(i, i + 1);
+                        sorted = false;
+                    }
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                await markSorted([i]);
+            }
+        }
+
+        async function cycleSort() {
+            const n = array.length;
+
+            for (let cycleStart = 0; cycleStart < n - 1; cycleStart++) {
+                let item = array[cycleStart];
+                let pos = cycleStart;
+
+                for (let i = cycleStart + 1; i < n; i++) {
+                    await compare(cycleStart, i);
+                    if (array[i] < item) {
+                        pos++;
+                    }
+                }
+
+                if (pos === cycleStart) {
+                    continue;
+                }
+
+                while (item === array[pos]) {
+                    pos++;
+                }
+
+                if (pos !== cycleStart) {
+                    const temp = array[pos];
+                    array[pos] = item;
+                    item = temp;
+                    swaps++;
+                    swapsEl.textContent = swaps;
+                    renderArray([pos, cycleStart], 'swap');
+                    playSwapSound();
+                    await sleep(getDelay());
+                }
+
+                while (pos !== cycleStart) {
+                    pos = cycleStart;
+                    for (let i = cycleStart + 1; i < n; i++) {
+                        await compare(cycleStart, i);
+                        if (array[i] < item) {
+                            pos++;
+                        }
+                    }
+
+                    while (item === array[pos]) {
+                        pos++;
+                    }
+
+                    if (item !== array[pos]) {
+                        const temp = array[pos];
+                        array[pos] = item;
+                        item = temp;
+                        swaps++;
+                        swapsEl.textContent = swaps;
+                        renderArray([pos], 'swap');
+                        playSwapSound();
+                        await sleep(getDelay());
+                    }
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                await markSorted([i]);
+            }
+        }
+
+        async function bogoSort() {
+            const n = array.length;
+            let isSorted = false;
+
+            while (!isSorted && !shouldStop) {
+                isSorted = true;
+
+                for (let i = 0; i < n - 1; i++) {
+                    await compare(i, i + 1);
+                    if (array[i] > array[i + 1]) {
+                        isSorted = false;
+                        break;
+                    }
+                }
+
+                if (!isSorted) {
+                    for (let i = n - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        await swap(i, j);
+                    }
+                }
+            }
+
+            for (let i = 0; i < n; i++) {
+                await markSorted([i]);
+            }
+        }
+
+        async function stoogeSort(l = 0, h = array.length - 1) {
+            if (l >= h || shouldStop) return;
+
+            await compare(l, h);
+            if (array[l] > array[h]) {
+                await swap(l, h);
+            }
+
+            if (h - l + 1 > 2) {
+                const t = Math.floor((h - l + 1) / 3);
+                await stoogeSort(l, h - t);
+                await stoogeSort(l + t, h);
+                await stoogeSort(l, h - t);
+            } else {
+                await markSorted([l, h]);
+            }
+        }
+
+        async function thanosSort() {
+            let currentArray = [...array];
+            let iteration = 0;
+            const maxIterations = 20;
+
+            while (iteration < maxIterations && !shouldStop) {
+                iteration++;
+                setAlgorithmMessage(`Сортировка Таноса: попытка ${iteration}`);
+
+                let isSorted = true;
+                for (let i = 0; i < currentArray.length - 1; i++) {
+                    await compare(i, i + 1);
+                    if (currentArray[i] > currentArray[i + 1]) {
+                        isSorted = false;
+                        break;
+                    }
+                }
+
+                if (isSorted) {
+                    array = currentArray;
+                    for (let i = 0; i < array.length; i++) {
+                        await markSorted([i]);
+                    }
+                    return;
+                }
+
+                const newArr = [];
+                for (let i = 0; i < currentArray.length; i++) {
+                    if (Math.random() > 0.5 || currentArray.length === 1) {
+                        newArr.push(currentArray[i]);
+                        renderArray([i], 'swap');
+                        playSwapSound();
+                        await sleep(getDelay());
+                    }
+                }
+
+                if (newArr.length === 0) {
+                    newArr.push(currentArray[Math.floor(Math.random() * currentArray.length)]);
+                }
+
+                currentArray = newArr;
+                array = currentArray;
+                renderArray();
+                await sleep(200);
+            }
+
+            array = currentArray;
+            await bubbleSort();
+        }
+
+        startBtn.addEventListener('click', async () => {
+            if (isSorting) return;
+
+            initAudio();
+            isSorting = true;
+            shouldStop = false;
+            comparisons = 0;
+            swaps = 0;
+            startTime = Date.now();
+
+            comparisonsEl.textContent = '0';
+            swapsEl.textContent = '0';
+            timeEl.textContent = '0';
+            statusEl.textContent = 'Работает';
+            setAlgorithmMessage(`Алгоритм: ${algorithmSelect.options[algorithmSelect.selectedIndex].text}`);
+
+            startBtn.disabled = true;
+            arraySizeInput.disabled = true;
+            algorithmSelect.disabled = true;
+
+            try {
+                switch (algorithmSelect.value) {
+                    case 'bubble':
+                        await bubbleSort();
+                        break;
+                    case 'selection':
+                        await selectionSort();
+                        break;
+                    case 'insertion':
+                        await insertionSort();
+                        break;
+                    case 'quick':
+                        await quickSort();
+                        break;
+                    case 'merge':
+                        await mergeSort();
+                        break;
+                    case 'heap':
+                        await heapSort();
+                        break;
+                    case 'shell':
+                        await shellSort();
+                        break;
+                    case 'cocktail':
+                        await cocktailSort();
+                        break;
+                    case 'gnome':
+                        await gnomeSort();
+                        break;
+                    case 'oddEven':
+                        await oddEvenSort();
+                        break;
+                    case 'cycle':
+                        await cycleSort();
+                        break;
+                    case 'bogo':
+                        await bogoSort();
+                        break;
+                    case 'stooge':
+                        await stoogeSort();
+                        break;
+                    case 'tanos':
+                        await thanosSort();
+                        break;
+                }
+
+                if (!shouldStop) {
+                    const endTime = Date.now();
+                    timeEl.textContent = endTime - startTime;
+                    statusEl.textContent = 'Завершено';
+                    setAlgorithmMessage('Сортировка завершена');
+                    playSortedSound();
+                    renderArray(Array.from({ length: array.length }, (_, i) => i), 'sorted');
+                }
+            } catch (error) {
+                if (error.message !== 'Stopped') {
+                    console.error(error);
+                    statusEl.textContent = 'Ошибка';
+                    setAlgorithmMessage('Во время выполнения произошла ошибка');
+                }
+            } finally {
+                isSorting = false;
+                startBtn.disabled = false;
+                arraySizeInput.disabled = false;
+                algorithmSelect.disabled = false;
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            shouldStop = true;
+            isSorting = false;
+            comparisons = 0;
+            swaps = 0;
+
+            comparisonsEl.textContent = '0';
+            swapsEl.textContent = '0';
+            timeEl.textContent = '0';
+            statusEl.textContent = 'Готов';
+            setAlgorithmMessage('Выберите алгоритм и нажмите Старт');
+
+            startBtn.disabled = false;
+            arraySizeInput.disabled = false;
+            algorithmSelect.disabled = false;
+            createArray();
+        });
+
+        newArrayBtn.addEventListener('click', () => {
+            if (!isSorting) {
+                createArray();
+                statusEl.textContent = 'Готов';
+                setAlgorithmMessage('Собран новый массив');
+            }
+        });
+
+        soundBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) {
+                initAudio();
+            }
+            syncSoundButton();
+        });
+
+        arraySizeInput.addEventListener('input', () => {
+            updateControls();
+            if (!isSorting) {
+                createArray();
+            }
+        });
+
+        speedInput.addEventListener('input', updateControls);
+
+        init();
+    </script>
+</body>
+</html>

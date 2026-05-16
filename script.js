@@ -4,6 +4,15 @@
 
 // Регистрируем отдельные игры-страницы (не через game.html)
 window.gamesRegistry = window.gamesRegistry || {};
+window.gamesRegistry.sort = window.gamesRegistry.sort || {
+  id: 'sort',
+  title: 'Сортировки',
+  description: 'Наглядная визуализация алгоритмов сортировки с гибкой настройкой.',
+  genre: 'Обучение',
+  difficulty: 'Авто',
+  shortcode: 'SORT',
+  url: 'sort.html'
+};
 window.gamesRegistry.forest = window.gamesRegistry.forest || {
   id: 'forest',
   title: 'Forest',
