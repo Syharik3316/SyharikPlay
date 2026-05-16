@@ -22,6 +22,15 @@ window.gamesRegistry.forest = window.gamesRegistry.forest || {
   shortcode: 'FOREST',
   url: 'forest.html'
 };
+window.gamesRegistry.syharikCase = window.gamesRegistry.syharikCase || {
+  id: 'syharik-case',
+  title: 'Syharik Case',
+  description: 'Бесплатный прокрут кейсов (за сухарики).',
+  genre: 'Симулятор',
+  difficulty: 'Лёгкая',
+  shortcode: 'CASE',
+  url: 'https://case.syharik.ru/'
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   initThemeToggle();
