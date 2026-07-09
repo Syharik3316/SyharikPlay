@@ -1,10 +1,12 @@
+
+
 ```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Лес Марктрахера</title>
+<title>МАРКТРАХЕР: Тёмный Лес</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -271,7 +273,7 @@ canvas { display: block; }
     <div class="blood-drip" style="left:65%; animation-delay:0.8s;"></div>
     <div class="blood-drip" style="left:85%; animation-delay:2.2s;"></div>
     <div class="title-container">
-        <h1>ЛЕС МАРКТРАХЕРА</h1>
+        <h1>ТЁМНЫЙ ЛЕС</h1>
         <p class="subtitle">Он уже ждёт тебя</p>
     </div>
     <div class="menu-buttons">
@@ -312,7 +314,7 @@ let scene, camera, renderer;
 let flashlight, flashlightTarget;
 let trees = [], notes = [];
 let notesCollected = 0;
-let noteTexts = ["67","Го в доту?","Сорок два","Выхода нет","RA9 не спасёт."];
+let noteTexts = ["Не смотри на него","Он всегда рядом","Не беги. Он слышит","Выхода нет","Ты уже мёртв"];
 
 let creatureGroup, creatureState = 'patrol', creatureBillboard = null;
 let creatureTarget = new THREE.Vector3();
@@ -434,11 +436,21 @@ function init(){
     createTrees(); createNotes(); createCreature(); drawScreamerFace(); setupControls();
     const startScreen=document.getElementById('start-screen');
     console.log('Start screen element:', startScreen);
- 
-    // Запуск игры только по кнопке "НАЧАТЬ"
+    
+    // Обработчик на весь экран
+    startScreen.addEventListener('click',function(e){
+        console.log('Click detected on start screen', e.target);
+        e.preventDefault();
+        e.stopPropagation();
+        startGame();
+    });
+    
+    // Дополнительный обработчик на кнопку
     const startButton=startScreen.querySelector('.start-prompt');
     if(startButton){
+        console.log('Start button found:', startButton);
         startButton.addEventListener('click',function(e){
+            console.log('Button clicked directly');
             e.preventDefault();
             e.stopPropagation();
             startGame();
@@ -756,7 +768,7 @@ function setupControls(){
 }
 function goHome(e){
     if(e){ e.preventDefault(); e.stopPropagation(); }
-    window.location.href='https://play.syharik.ru';
+    window.location.href='https://play.syharik3316.ru';
 }
 async function loadSfxBuffer(url){
     if(!audioCtx) return null;
@@ -771,13 +783,6 @@ async function loadSfxBuffer(url){
         console.warn('SFX load failed:',url,err);
         return null;
     }
-}
-async function loadFirstSfxBuffer(urls){
-    for(const url of urls){
-        const b=await loadSfxBuffer(url);
-        if(b) return b;
-    }
-    return null;
 }
 async function loadSfxBuffers(urls){
     const loaded=await Promise.all(urls.map(u=>loadSfxBuffer(u)));
@@ -842,8 +847,7 @@ function initAudio(){
     audioLoops=[o1,o2,w,cA,cB,lfo];
     randomSoundTimer=15+Math.random()*15;
     loadSfxBuffers(NOTE_SFX_URLS).then(b=>noteSfxBuffers=b);
-    // SCREAMER_SFX_URL — одиночный файл, оборачиваем в массив для loadFirstSfxBuffer
-    loadFirstSfxBuffer([SCREAMER_SFX_URL]).then(b=>screamerSfxBuffer=b);
+    loadSfxBuffer(SCREAMER_SFX_URL).then(b=>screamerSfxBuffer=b);
     loadSfxBuffer(MONSTER_STEP_SFX_URL).then(b=>monsterStepSfxBuffer=b);
     }catch(err){
         console.error('Error in initAudio:', err);
@@ -868,9 +872,6 @@ const bs=audioCtx.sampleRate*0.3,b=audioCtx.createBuffer(1,bs,audioCtx.sampleRat
 function playHeartbeat(){if(!audioCtx)return;const beat=()=>{const o=audioCtx.createOscillator();o.type='sine';o.frequency.value=60;const g=audioCtx.createGain();g.gain.setValueAtTime(0.08,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.15);o.connect(g);g.connect(masterGain);o.start();o.stop(audioCtx.currentTime+0.2);};beat();setTimeout(beat,150);}
 function playScreamerSound(){
 if(!audioCtx)return;
-const out=audioCtx.createGain();
-out.gain.value=1.0;
-out.connect(audioCtx.destination);
 if(screamerSfxBuffer){
 const s=audioCtx.createBufferSource();
 s.buffer=screamerSfxBuffer;
@@ -878,16 +879,16 @@ const g=audioCtx.createGain();
 g.gain.value=2.0;
 s.connect(g);
  // Скример подключаем напрямую, чтобы не глушился общим микшером
- g.connect(out);
+ g.connect(audioCtx.destination);
 s.start();
 return;
 }
-const now=audioCtx.currentTime;const s1=audioCtx.createOscillator();s1.type='sawtooth';s1.frequency.setValueAtTime(400,now);s1.frequency.exponentialRampToValueAtTime(1200,now+0.05);s1.frequency.linearRampToValueAtTime(800,now+1.5);const sg1=audioCtx.createGain();sg1.gain.setValueAtTime(0,now);sg1.gain.linearRampToValueAtTime(0.9,now+0.02);sg1.gain.setValueAtTime(0.9,now+0.3);sg1.gain.exponentialRampToValueAtTime(0.01,now+1.5);s1.connect(sg1);sg1.connect(out);s1.start(now);s1.stop(now+1.6);
-const gr=audioCtx.createOscillator();gr.type='sawtooth';gr.frequency.setValueAtTime(80,now);gr.frequency.linearRampToValueAtTime(60,now+1.5);const gg=audioCtx.createGain();gg.gain.setValueAtTime(0.7,now);gg.gain.exponentialRampToValueAtTime(0.01,now+1.5);const trm=audioCtx.createOscillator();trm.type='sine';trm.frequency.value=15;const trmG=audioCtx.createGain();trmG.gain.value=0.4;trm.connect(trmG);trmG.connect(gg.gain);trm.start(now);trm.stop(now+1.6);gr.connect(gg);gg.connect(out);gr.start(now);gr.stop(now+1.6);
-const ds=audioCtx.createOscillator();ds.type='square';ds.frequency.setValueAtTime(600,now);ds.frequency.setValueAtTime(900,now+0.1);ds.frequency.linearRampToValueAtTime(500,now+1.2);const dg=audioCtx.createGain();dg.gain.setValueAtTime(0.5,now);dg.gain.exponentialRampToValueAtTime(0.01,now+1.2);const ws=audioCtx.createWaveShaper();const curve=new Float32Array(256);for(let i=0;i<256;i++){const x=(i/128)-1;curve[i]=(Math.PI+200*x)/(Math.PI+200*Math.abs(x));}ws.curve=curve;ds.connect(ws);ws.connect(dg);dg.connect(out);ds.start(now);ds.stop(now+1.3);
-const nbs=audioCtx.sampleRate,nb=audioCtx.createBuffer(1,nbs,audioCtx.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nbs;i++)nd[i]=Math.random()*2-1;const ns=audioCtx.createBufferSource();ns.buffer=nb;const ng=audioCtx.createGain();ng.gain.setValueAtTime(0.7,now);ng.gain.exponentialRampToValueAtTime(0.01,now+0.6);ns.connect(ng);ng.connect(out);ns.start(now);
-const inf=audioCtx.createOscillator();inf.type='sine';inf.frequency.value=25;const ig=audioCtx.createGain();ig.gain.setValueAtTime(1.0,now);ig.gain.exponentialRampToValueAtTime(0.01,now+0.8);inf.connect(ig);ig.connect(out);inf.start(now);inf.stop(now+0.9);
-const mt=audioCtx.createOscillator();mt.type='sawtooth';mt.frequency.setValueAtTime(2000,now+0.1);mt.frequency.linearRampToValueAtTime(3500,now+0.3);mt.frequency.linearRampToValueAtTime(1500,now+0.8);const mf=audioCtx.createBiquadFilter();mf.type='bandpass';mf.frequency.value=3000;mf.Q.value=5;const mg2=audioCtx.createGain();mg2.gain.setValueAtTime(0,now);mg2.gain.linearRampToValueAtTime(0.3,now+0.1);mg2.gain.exponentialRampToValueAtTime(0.01,now+0.8);mt.connect(mf);mf.connect(mg2);mg2.connect(out);mt.start(now);mt.stop(now+0.9);}
+const now=audioCtx.currentTime;const s1=audioCtx.createOscillator();s1.type='sawtooth';s1.frequency.setValueAtTime(400,now);s1.frequency.exponentialRampToValueAtTime(1200,now+0.05);s1.frequency.linearRampToValueAtTime(800,now+1.5);const sg1=audioCtx.createGain();sg1.gain.setValueAtTime(0,now);sg1.gain.linearRampToValueAtTime(0.9,now+0.02);sg1.gain.setValueAtTime(0.9,now+0.3);sg1.gain.exponentialRampToValueAtTime(0.01,now+1.5);s1.connect(sg1);sg1.connect(masterGain);s1.start(now);s1.stop(now+1.6);
+const gr=audioCtx.createOscillator();gr.type='sawtooth';gr.frequency.setValueAtTime(80,now);gr.frequency.linearRampToValueAtTime(60,now+1.5);const gg=audioCtx.createGain();gg.gain.setValueAtTime(0.7,now);gg.gain.exponentialRampToValueAtTime(0.01,now+1.5);const trm=audioCtx.createOscillator();trm.type='sine';trm.frequency.value=15;const trmG=audioCtx.createGain();trmG.gain.value=0.4;trm.connect(trmG);trmG.connect(gg.gain);trm.start(now);trm.stop(now+1.6);gr.connect(gg);gg.connect(masterGain);gr.start(now);gr.stop(now+1.6);
+const ds=audioCtx.createOscillator();ds.type='square';ds.frequency.setValueAtTime(600,now);ds.frequency.setValueAtTime(900,now+0.1);ds.frequency.linearRampToValueAtTime(500,now+1.2);const dg=audioCtx.createGain();dg.gain.setValueAtTime(0.5,now);dg.gain.exponentialRampToValueAtTime(0.01,now+1.2);const ws=audioCtx.createWaveShaper();const curve=new Float32Array(256);for(let i=0;i<256;i++){const x=(i/128)-1;curve[i]=(Math.PI+200*x)/(Math.PI+200*Math.abs(x));}ws.curve=curve;ds.connect(ws);ws.connect(dg);dg.connect(masterGain);ds.start(now);ds.stop(now+1.3);
+const nbs=audioCtx.sampleRate,nb=audioCtx.createBuffer(1,nbs,audioCtx.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nbs;i++)nd[i]=Math.random()*2-1;const ns=audioCtx.createBufferSource();ns.buffer=nb;const ng=audioCtx.createGain();ng.gain.setValueAtTime(0.7,now);ng.gain.exponentialRampToValueAtTime(0.01,now+0.6);ns.connect(ng);ng.connect(masterGain);ns.start(now);
+const inf=audioCtx.createOscillator();inf.type='sine';inf.frequency.value=25;const ig=audioCtx.createGain();ig.gain.setValueAtTime(1.0,now);ig.gain.exponentialRampToValueAtTime(0.01,now+0.8);inf.connect(ig);ig.connect(masterGain);inf.start(now);inf.stop(now+0.9);
+const mt=audioCtx.createOscillator();mt.type='sawtooth';mt.frequency.setValueAtTime(2000,now+0.1);mt.frequency.linearRampToValueAtTime(3500,now+0.3);mt.frequency.linearRampToValueAtTime(1500,now+0.8);const mf=audioCtx.createBiquadFilter();mf.type='bandpass';mf.frequency.value=3000;mf.Q.value=5;const mg2=audioCtx.createGain();mg2.gain.setValueAtTime(0,now);mg2.gain.linearRampToValueAtTime(0.3,now+0.1);mg2.gain.exponentialRampToValueAtTime(0.01,now+0.8);mt.connect(mf);mf.connect(mg2);mg2.connect(masterGain);mt.start(now);mt.stop(now+0.9);}
 function playMonsterStep(){
 if(!audioCtx)return;
 if(monsterStepSfxBuffer){
@@ -904,17 +905,6 @@ if(creaturePanner)f.connect(creaturePanner);else f.connect(masterGain);
 s.start();
 return;
 }
-const o=audioCtx.createOscillator();
-o.type='sine';
-o.frequency.value=50;
-const g=audioCtx.createGain();
-g.gain.setValueAtTime(0.4,audioCtx.currentTime);
-g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.25);
-o.connect(g);
-if(creaturePanner)g.connect(creaturePanner);else g.connect(masterGain);
-o.start();
-o.stop(audioCtx.currentTime+0.3);
-}
 function stopAllAudioForGameOver(){
     if(!audioCtx || audioStoppedForGameOver) return;
     audioStoppedForGameOver=true;
@@ -930,6 +920,17 @@ function stopAllAudioForGameOver(){
             }
         }
     }catch(e){}
+}
+const o=audioCtx.createOscillator();
+o.type='sine';
+o.frequency.value=50;
+const g=audioCtx.createGain();
+g.gain.setValueAtTime(0.4,audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.25);
+o.connect(g);
+if(creaturePanner)g.connect(creaturePanner);else g.connect(masterGain);
+o.start();
+o.stop(audioCtx.currentTime+0.3);
 }
 function playRandomForestSound(){if(!audioCtx)return;if(Math.random()<0.5){const bs=audioCtx.sampleRate*0.2,b=audioCtx.createBuffer(1,bs,audioCtx.sampleRate),d=b.getChannelData(0);for(let i=0;i<bs;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(audioCtx.sampleRate*0.03));const s=audioCtx.createBufferSource();s.buffer=b;const f=audioCtx.createBiquadFilter();f.type='bandpass';f.frequency.value=800;f.Q.value=2;const g=audioCtx.createGain();g.gain.value=0.1+Math.random()*0.1;const p=audioCtx.createStereoPanner();p.pan.value=Math.random()*2-1;s.connect(f);f.connect(g);g.connect(p);p.connect(masterGain);s.start();}else{const o=audioCtx.createOscillator();o.type='sine';o.frequency.setValueAtTime(200,audioCtx.currentTime);o.frequency.linearRampToValueAtTime(140,audioCtx.currentTime+1.5);const g=audioCtx.createGain();g.gain.setValueAtTime(0,audioCtx.currentTime);g.gain.linearRampToValueAtTime(0.04,audioCtx.currentTime+0.3);g.gain.linearRampToValueAtTime(0,audioCtx.currentTime+1.5);const p=audioCtx.createStereoPanner();p.pan.value=Math.random()*2-1;o.connect(g);g.connect(p);p.connect(masterGain);o.start();o.stop(audioCtx.currentTime+2);}}
 function startStareSound(){if(stareOsc||!audioCtx)return;stareOsc=audioCtx.createOscillator();stareOsc.type='sine';stareOsc.frequency.value=2000;stareGain=audioCtx.createGain();stareGain.gain.value=0;stareOsc.connect(stareGain);stareGain.connect(masterGain);stareOsc.start();}
@@ -954,7 +955,7 @@ function updateCreature(delta){
 
     // Скорости монстра: патруль и погоня (всегда чуть медленнее спринта игрока)
     const pSpeeds=[0.022,0.032,0.042,0.048,0.052,0.055];
-    const cSpeeds=[0.058,0.064,0.069,0.072,0.074,0.076];
+    const cSpeeds=[0.06,0.066,0.072,0.074,0.076,0.078];
     const pSpeed=pSpeeds[Math.min(notesCollected,5)];
     const cSpeed=cSpeeds[Math.min(notesCollected,5)];
     let moved=false;
@@ -1031,20 +1032,6 @@ function triggerDeath(){
     };
 
     try{
-        // Сначала гарантированно показываем скример-оверлей (даже если дальше что-то упадёт)
-        try{
-            const ds0=document.getElementById('death-screen');
-            if(ds0) ds0.style.display='none';
-            const so0=document.getElementById('screamer-overlay');
-            if(so0){
-                so0.style.display='flex';
-                so0.style.visibility='visible';
-                so0.style.opacity='1';
-            }
-            // перерисуем лицо на всякий случай
-            try{ drawScreamerFace(); }catch(e){}
-        }catch(e){}
-
         stopAllAudioForGameOver();
         playScreamerSound();
         if(renderer && renderer.domElement) renderer.domElement.style.filter='';
@@ -1052,13 +1039,7 @@ function triggerDeath(){
         const so=document.getElementById('screamer-overlay');
         const face=document.getElementById('screamer-face');
         const rf=document.getElementById('red-flash');
-        const ds=document.getElementById('death-screen');
-        if(ds) ds.style.display='none';
-        if(so){
-            so.style.display='flex';
-            so.style.visibility='visible';
-            so.style.opacity='1';
-        }
+        if(so) so.style.display='flex';
 
         let si=null, fi=null;
         if(face){
@@ -1076,7 +1057,7 @@ function triggerDeath(){
             try{ if(si) clearInterval(si); }catch(e){}
             try{ if(fi) clearInterval(fi); }catch(e){}
             deathCleanup();
-        },2200);
+        },1500);
     }catch(err){
         console.error('triggerDeath failed',err);
         deathCleanup();
